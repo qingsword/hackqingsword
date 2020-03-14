@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--Copyright©QingSword.COM︻☼1010D>-->
+<!--Copyright©X.QingSword.COM︻☼1010D>-->
+<html lang="zh-cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0,user-scalable=no">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,python,计算机技术博客,渗透测试,kali渗透测试,kali,kali web渗透,kali主机渗透,kali无线渗透,metasploit,白帽子测试">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,node.js,javascript,python,计算机技术博客">
+	<meta name="author" content="x.qingsword.com">
+	<title>[Metasploit]-2-Metasploit简介 - X.QingSword.COM</title>
+	<link rel="shortcut icon" type="image/x-icon" href="../logo/favicon.ico">
+	<link rel="stylesheet" type="text/css" href="../css/basic.css">
+	<link rel="stylesheet" type="text/css" href="../css/text.css">
+	<!-- 代码块高亮js -->
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shCore.css"/>
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shThemeRDark.css"/>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript">
+	SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+	<!--header -->
+	<header id="nav">
+			<div class="nav-container"> 
+				<!-- 根大纲-->
+				<a href="http://x.qingsword.com" title="晴刃">
+					<h1 class="nav-logo">晴刃</h1>
+				</a>
+				<h2 class="nav-site-description desc-hidden">
+					He lies somewhere here
+				</h2>
+				<nav class="nav-links"> 
+					<!-- nav连接大纲-->
+					<h1 style="display:none;">网站导航</h1> 
+					<ul>
+						<li  class="active li-hidden">
+							<a href="../index.html" title="home">
+								<span class="link-word"><img src="../logo/home.png" alt="home" class="link-img">首页</span>
+							</a>
+						</li>
+						<li class="li-hidden">
+							<a href="../pt.html" title="pt">
+								<span class="link-word"><img src="../logo/linux.png" alt="pt" class="link-img">渗透<span class="word-hidden">技术</span></span>
+							</a>
+						</li>
+						<li >
+							<a href="../sitemap.html" title="sitemap">
+								<span class="link-word"><img src="../logo/archives.png" alt="archives" class="link-img"><span class="word-hidden">文章</span>归档</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>		
+	</header>
+	<!-- /header -->
+
+	<!-- content-->
+	<div id="content">
+		<div class="content-container">
+			<!-- 文章区 -->
+			<article class="text-container">
+				<header class="text-header">
+					<h1>[Metasploit]-2-Metasploit简介</h1>	
+				</header><!-- /header -->
+				<section class="text-body">
+					<h2>引言</h2>
+					<p>早在2003年，大神"HD More"发布了Metasploit第一版，并将其开源，此版本一出，便引起了安全界的广泛关注，也让部分软硬件厂商感到了不安，Metasploit搜集了几乎所有重要的安全漏洞，其模块化的设计，让漏洞的调用变得十分简单，四年后，在2007年"HD More"使用Ruby重写了其所有功能，目前Metasploit已经成为最受欢迎的渗透测试框架之一。</p>
+					<!-- 目录 -->
+					<h2>文章目录</h2>
+					<ul class="contents">	
+						 <li><a href="#Metasploit-brief-1">0×1.Metasploit数据库简介</a></li>
+						 <li><a href="#Metasploit-brief-2">0×2.Metasploit模块简介</a></li>
+						 <li><a href="#Metasploit-brief-3">0×3.Metasploit攻击流程简介</a></li>
+					 </ul>
+					<!-- /目录 -->
+
+					<!-- 正文 -->
+					
+					<h2 id="Metasploit-brief-1">0×1.Metasploit数据库介绍</h2>
+
+					<p>Kali默认已经安装了Metasploit，Metasploit在系统中使用Postgresql数据库存储数据（在渗透测试过程中探测到的主机数据，模块的参数等），在早期的一些版本中需要先启动数据库再启动msf，而现在的新版本在启动Metasploit的过程中就会自动启动Postgresql数据库。</p>
+
+					<p>Metasploit中Postgresql数据库默认使用的端口为5432，在第一次启动Metasploit过程中，Metasploit会自动初始化并且连接到数据库，如下所示：</p>
+					<pre class="brush: bash;">
+					#查看数据库端口是否打开，默认情况下是随机启动的
+					root@qingsword.com:~# ss -pantu | grep 5432
+					tcp LISTEN 0 128 127.0.0.1:5432 0.0.0.0:* users:(("postgres",pid=3819,fd=6))
+
+					#打开Metasploit控制台的方法有好几种，下面介绍三种常用的方法
+
+					#方法一，使用msfconsole命令，进入Metasploit控制台
+					root@qingsword.com:~# msfconsole
+
+					#方法二，安静模式启动msf控制台（同方法一，唯一不同的是，-q参数以安静模式启动，不会显示Banner信息）
+					root@qingsword.com:~# msfconsole -q
+
+					#方法三，使用msfdb run进入Metasploit控制台（有时候，我们使用方法一进入msf控制台后，执行命令的过程中，会得到“数据库未连接”的提示，这个时候，可以exit退出msf控制台，使用方法三手动开启msf数据库，所以，笔者一般直接使用方法三进入msf控制台）
+					root@qingsword.com:~# msfdb run
+					</pre>
+
+					<p>如果成功的进入了msf控制台，会看到Metasploit生成的Banner信息（一张有趣的字符画，可以在msf控制台下输入banner命令来刷新这个字符画，据说有几万张），退出msf控制台的方法是输入一个exit，如下所示：</p>
+					<pre class="brush: bash;">
+					#退出msf控制台
+					msf> exit 
+					</pre>
+
+					<p>当我们进行了一些操作后，这些操作会向数据库写入数据，随着时间的推移，数据库中会保存大量被我们探测过的主机列表以及模块参数等，如果不需要这些数据了，想重新初始化数据库，就可以使用下面的命令，这个操作将删除原有数据库，重新创建一个新的数据库：</p>
+					<pre class="brush: bash;">
+					#使用msfdb reinit重新初始化数据库
+					root@qingsword.com:~# msfdb reinit
+					</pre>
+
+					<h2 id="Metasploit-brief-2">0×2.Metasploit模块介绍</h2>
+					
+					<p>Metasploit主目录Kali中的位置：</p>
+					<pre class="brush: bash;">
+					#Metasploit安装好后，主文件夹默认位置为"/usr/share/metasploit-framework/"
+					root@qingsword.com:~# cd /usr/share/metasploit-framework/
+					</pre>
+
+					<p>在Metasploit主文件夹的模块（modules）目录中，存放着Metasploit最核心的六大模块：</p>
+					<pre class="brush: bash;">
+					root@qingsword.com:/usr/share/metasploit-framework# cd modules/
+					root@qingsword.com:/usr/share/metasploit-framework/modules# ls
+					auxiliary  encoders  exploits  nops  payloads  post
+					</pre>
+
+					<p>六大模块功能简介：</p>
+					<p class="indent-p">
+						× Auxiliary——执行一些攻击过程中辅助性的内容，信息收集扫描等；<br>
+						× Encoders——对发送的Payload代码进行加密免杀，躲避AV（Anti virus）查杀；<br>
+						× Exploits——包含主动或被动的攻击代码，这些代码可以针对指定系统版本中存在的漏洞进行利用；<br>
+						× Nops——一般用于提高Payload稳定性，维持大小等；<br>
+						× Payloads——在Exploits中的利用代码成功调用目标系统漏洞后，会将一个我们自定义的Payload传输到目标机器上，覆盖目标系统内存中能够被利用的那一部分内容，当这个Payload在目标机器内存中执行后，会根据我们的参数设置，返回给我们一个能够执行命令的ShellCode，从而让我们能够控制目标机器；<br>
+						× Post——包含一些枚举暴力破解模块等；<br>
+					</p>
+					
+					<p>进入对应模块目录，可以看针对不同操作系统不同版本的利用脚本，本例进入exploits模块目录，查看Windows目录：</p>
+					<pre class="brush: bash;">
+					#使用cd命令进入到exploits目录下的windows目录中
+					root@qingsword.com:/usr/share/metasploit-framework/modules# cd exploits/windows/
+
+					#可以查看到在这个目录下存在针对windows不同服务的利用代码，这些利用代码大多数是使用ruby语言写的，在本系列后面的文章中，有对这些服务利用代码的使用方法介绍，这里仅做了解
+					root@qingsword.com:/usr/share/metasploit-framework/modules/exploits/windows# ls
+					antivirus dcerpc games license motorola oracle smb unicenter arkeia email http local mssql pop3 smtp vnc backdoor emc iis lotus mysql postgres ssh vpn backupexec fileformat imap lpd nfs proxy ssl winrm brightstor firewall isapi misc nntp scada telnet wins browser ftp ldap mmsp novell sip tftp
+					</pre>
+
+					<h2 id="Metasploit-brief-3">0×3.Metasploit攻击流程简介</h2>
+
+					<p>我们如果要使用Metasploit去攻击某台主机，首先需要得到目标系统版本，开放端口等信息，通过端口识别服务类型，通过端口返回的banner信息，得到第三方软件的版本号等信息后，首先使用Exploits利用模块，去触发目标机器的对应的漏洞，然后通过这个漏洞（可修改或覆盖内存中的多少字节等）发送Payload代码区域覆盖目标机器内存中的对应位置，从而控制目标主机，然后进一步获取目标主机的权限与敏感信息等；</p>
+
+					<p>虽然Metasploit非常的智能，会针对不同内存空间大小发送对应的Payload，这里还是想稍微介绍一下，对应不同内存大小，Metasploit会去Payloads模块目录中选取不同大小的Payload发送给目标：</p>
+					<pre class="brush: bash;">
+					#在Payloads目录下，有三个目录，这三个目录中装着不同大小的Payload代码文件
+					root@qingsword.com:~# ls /usr/share/metasploit-framework/modules/payloads/
+					singles  stagers  stages
+
+					#singles payload，可以在目标机器上加载一个完整的命令执行进程，但部分漏洞可修改的内存空间非常小，无法加载其中的代码文件，这个时候需要使用stagers payload首先在目标计算机上开放一个端口连接到本地计算机上，这个stagers payload仅维持这个连接，所以需要写入内存的数值非常的小，连接建立后，再使用stages payload，从攻击者计算机中发送一个完整的payload到目标的计算机中执行，从而获得目标的完整控制权。
+					</pre>
+
+					<p>在下一篇文章中，我们会用一个经典漏洞实例来演示这篇文章中不同模块的用法。</p>
+
+					<!-- /正文 -->
+
+				<footer class="text-footer">
+					<p>
+						*转载请注明来自:<a title="晴刃-自由、互助、分享、专注计算机技术。" href="http://x.qingsword.com" target="_blank">晴刃(X.QingSword.COM)</a>
+					</p>
+					<p>*原文连接:<a title="[Metasploit]-2-Metasploit简介" href="https://x.qingsword.com/qing/Metasploit-2.html" target="_blank">https://x.qingsword.com/qing/Metasploit-2.html</a></p>
+				</footer>
+			</article>
+			<!-- /文章区 -->	
+		</div>
+	</div>
+	<!-- /content -->
+	
+	<!-- footer -->
+	<footer id="footer">
+		<div class="footer-container">
+			QingSword.COM &nbsp;<img src="../logo/by-nc-sa.png" alt="Creative Commons" title="Creative Commons">
+		</div>
+	</footer>
+	<!-- /footer -->
+</body>
+</html>

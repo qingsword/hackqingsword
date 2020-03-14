@@ -1,0 +1,21 @@
+#1,XP SP3, install key: PBW92-RXBQ3-GW4X8-RBVDC-Q4BRG
+ed2k://|file|zh-hans_windows_xp_professional_with_service_pack_3_x86_cd_x14-80404.iso|630239232|CD0900AFA058ACB6345761969CBCBFF4|/
+
+#2,win2008 R2
+ed2k://|file|cn_windows_server_2008_r2_standard_enterprise_datacenter_and_web_with_sp1_x64_dvd_617598.iso|3368839168|D282F613A80C2F45FF23B79212A3CF67|/
+
+#3,Win7
+ed2k://|file|cn_windows_7_ultimate_x64_dvd_x15-66043.iso|3341268992|7DD7FA757CE6D2DB78B6901F81A6907A|/
+
+#4,Win10
+ed2k://|file|cn_windows_10_multiple_editions_x64_dvd_6848463.iso|4303300608|94FD861E82458005A9CA8E617379856A|/
+
+#5,Ubuntu
+https://www.ubuntu.com/download/desktop
+
+#6,CentOS
+https://www.centos.org/download/
+
+#7,Win2003  install key:MDGJK-PF6YQ-PD8DJ-RFQVM-7WKWG
+ed2k://|file|en_win_srv_2003_r2_enterprise_with_sp2_vl_cd1_X13-48610.iso|624521216|B11D2E4C8D8AD7EC72B546EAB11005C3|/
+ed2k://|file|en_win_srv_2003_r2_enterprise_with_sp2_vl_cd2_X13-68584.iso|127309824|60DB8AB231134444F42AB3ABC81853AD|/

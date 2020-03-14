@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!--Copyright©QingSword.COM︻☼1010D>-->
+<!--Copyright©X.QingSword.COM︻☼1010D>-->
+<html lang="zh-cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0,user-scalable=no">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,python,计算机技术博客,渗透测试,kali渗透测试,kali,kali web渗透,kali主机渗透,kali无线渗透,metasploit,白帽子测试">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,node.js,javascript,python,计算机技术博客">
+	<meta name="author" content="x.qingsword.com">
+	<title>[Metasploit]-1-渗透测试环境搭建 - X.QingSword.COM</title>
+	<link rel="shortcut icon" type="image/x-icon" href="../logo/favicon.ico">
+	<link rel="stylesheet" type="text/css" href="../css/basic.css">
+	<link rel="stylesheet" type="text/css" href="../css/text.css">
+	<!-- 代码块高亮js -->
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shCore.css"/>
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shThemeRDark.css"/>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript">
+	SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+	<!--header -->
+	<header id="nav">
+			<div class="nav-container"> 
+				<!-- 根大纲-->
+				<a href="http://x.qingsword.com" title="晴刃">
+					<h1 class="nav-logo">晴刃</h1>
+				</a>
+				<h2 class="nav-site-description desc-hidden">
+					He lies somewhere here
+				</h2>
+				<nav class="nav-links"> 
+					<!-- nav连接大纲-->
+					<h1 style="display:none;">网站导航</h1> 
+					<ul>
+						<li  class="active li-hidden">
+							<a href="../index.html" title="home">
+								<span class="link-word"><img src="../logo/home.png" alt="home" class="link-img">首页</span>
+							</a>
+						</li>
+						<li class="li-hidden">
+							<a href="../pt.html" title="pt">
+								<span class="link-word"><img src="../logo/linux.png" alt="pt" class="link-img">渗透<span class="word-hidden">技术</span></span>
+							</a>
+						</li>
+						<li >
+							<a href="../sitemap.html" title="sitemap">
+								<span class="link-word"><img src="../logo/archives.png" alt="archives" class="link-img"><span class="word-hidden">文章</span>归档</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>		
+	</header>
+	<!-- /header -->
+
+	<!-- content-->
+	<div id="content">
+		<div class="content-container">
+			<!-- 文章区 -->
+			<article class="text-container">
+				<header class="text-header">
+					<h1>[Metasploit]-1-渗透测试环境搭建</h1>	
+				</header><!-- /header -->
+				<section class="text-body">
+					<h2>引言</h2>
+					<p>这篇文章，将图文演示如何在VMware虚拟机中安装Kali Linux渗透测试环境，文中会涉及不同版本的Windows系统与Linux系统的下载与安装，此系列文章将着重介绍Kali Linux中Metasploit渗透测试框架的使用。</p>
+					<!-- 目录 -->
+					<h2>文章目录</h2>
+					<ul class="contents">	
+						 <li><a href="#Penetration-test-environment-1">0×1.如何在VMware虚拟机中安装Kali Linux</a></li>
+						 <li><a href="#Penetration-test-environment-2">0×2.如何在Kali Linux中安装VMware Tools</a></li>
+						 <li><a href="#Penetration-test-environment-3">0×3.需要下载安装的系统列表</a></li>
+					 </ul>
+					<!-- /目录 -->
+
+					<!-- 正文 -->
+					<h2 id="Penetration-test-environment-1">0×1.如何在VMware虚拟机中安装Kali Linux</h2>
+
+					<p>VMware的使用不是本文的重点，本文假设读者已经能够熟练使用VMware虚拟机，理解虚拟机的几种网络连接方式，如果对VMware使用还不了解的同学，建议先学习一下简单虚拟机的使用。</p>
+					<p>首先[<a title="Kali官方下载页面" href="https://www.kali.org/downloads/" target="_blank" rel="nofollow">点击这里</a>]跳转到Kali官方下载页面，下载"Kali Linux 64 Bit"版本ISO文件。</p>
+					<p>在本文完成时，最新版本的Kali安装镜像文件版本是"2018.2"，下面我们以"2018.2"版本演示安装过程：</p>
+					<p>虚拟机资源分配：</p>
+					<p class="indent-p">
+						× CPU 2c <br>
+						× 内存 4G <br>
+						× 磁盘大小 60G <br>
+						× 网络连接方式 NAT 
+					</p>
+					<p>上面是笔者的Kali虚拟机资源分配，大家可以根据自身机器性能调整，如果需要安装图形化桌面，内存最低建议1G；CPU如果不确定自己机器的核心数量，可以直接选择1个CPU和1个核心；磁盘是动态占用机制，一般Kali安装上后，实际占用大概6G～8G左右的空间，60G是这台虚拟机磁盘占用量的一个上限。</p>
+					<p>将kali的iso镜像载入后，启动VMware虚拟机，选择"Graphical install"，图形化界面安装方式，如下图所示：</p>
+					<img src="images/kali-install-1.jpeg" alt="images/kali-install-1.jpeg">
+					<p>下面的安装步骤没有太多可说，直接上图：</p>
+					<img src="images/kali-install-2.jpeg" alt="images/kali-install-2.jpeg">
+					<img src="images/kali-install-3.jpeg" alt="images/kali-install-3.jpeg">
+					<img src="images/kali-install-4.jpeg" alt="images/kali-install-4.jpeg">
+					<p>输入自定义的主机名与root用户的密码，如下图所示：</p>
+					<img src="images/kali-install-5.jpeg" alt="images/kali-install-5.jpeg">
+					<img src="images/kali-install-6.jpeg" alt="images/kali-install-6.jpeg">
+					<p>如果只是测试环境，安装在虚拟机里面磁盘分区没有太多讲究，直接全盘分给根目录即可，一路默认，在最后一步选择"是"，将更改写入磁盘，如下所示：</p>
+					<img src="images/kali-install-7.jpeg" alt="images/kali-install-7.jpeg">
+					<img src="images/kali-install-8.jpeg" alt="images/kali-install-8.jpeg">
+					<img src="images/kali-install-9.jpeg" alt="images/kali-install-9.jpeg">
+					<img src="images/kali-install-10.jpeg" alt="images/kali-install-10.jpeg">
+					<img src="images/kali-install-11.jpeg" alt="images/kali-install-11.jpeg">
+					<p>不使用网络镜像，在安装时不会联网进行更新，提升安装速度，升级操作可以等到安装好系统后再执行：</p>
+					<img src="images/kali-install-12.jpeg" alt="images/kali-install-12.jpeg">
+					<p>安装GRUB，将GRUB安装到/dev/sda：</p>
+					<img src="images/kali-install-13.jpeg" alt="images/kali-install-13.jpeg">
+					<img src="images/kali-install-14.jpeg" alt="images/kali-install-14.jpeg">
+					<p>完成安装。</p>
+
+					<h2 id="Penetration-test-environment-2">0×2.如何在Kali Linux中安装VMware Tools</h2>
+					<p>刚装好的Kali不能自适应VMware窗口大写，也不支持物理机的文件直接复制，这些功能都需要先安装VMware Tools才能实现，点击VMware窗口的VM菜单，选择"安装VMware Tools"，然后打开终端，按照下面的方法安装"VMware Tools"：</p>
+
+					<pre class="brush: bash;">
+					#1，进入自动挂载的光驱目录，将VM安装压缩包拷贝到root家目录
+					root@qingsword:~# cd /media/cdrom
+					root@qingsword:/media/cdrom# ls
+					manifest.txt     VMwareTools-10.2.5-8068393.tar.gz  vmware-tools-upgrader-64
+					run_upgrader.sh  vmware-tools-upgrader-32
+					#在这一步中，大家看到的VM压缩包的版本号可能随着时间的推移版本的更新，会与我不同，请按照自己ls出来的文件名为准
+					root@qingsword:/media/cdrom# cp VMwareTools-10.2.5-8068393.tar.gz  ~
+
+					#2，切换到当前用户家目录，解压缩
+					root@qingsword:/media/cdrom# cd
+					root@qingsword:~# ls
+					VMwareTools-10.2.5-8068393.tar.gz  
+					root@qingsword:~# tar -vxzf VMwareTools-10.2.5-8068393.tar.gz 
+
+					,3，进入解压后的目录，使用 "./vmware-install.pl "命令安装，安装过程会提示一些安装路径，一路回车即可，直到看到"Enjoy"，安装完成。
+					root@qingsword:~# ls
+					VMwareTools-10.2.5-8068393.tar.gz
+					vmware-tools-distrib
+					root@qingsword:~# cd vmware-tools-distrib/
+					root@qingsword:~/vmware-tools-distrib# ls
+					bin  caf  doc  etc  FILES  INSTALL  installer  lib  vgauth  vmware-install.pl
+					root@qingsword:~/vmware-tools-distrib# ./vmware-install.pl 
+					</pre>
+					<p>对这上述安装步骤不是很了解的朋友，可以[<a title="qingsword制作kali安装VMware Tools小视频" href="https://pan.baidu.com/s/1KZXpPr2t26FEHiMPzujquQ" target="_blank" rel="nofollow">点击这里</a>][提取码 0cti]使用百度网盘下载这个视频看看。</p>
+
+					<h2 id="Penetration-test-environment-3">0×3.需要下载安装的系统列表</h2>
+
+					<p>除了kali外，本系列文章还需要安装一些具有漏洞的操作系统，下面整理出需要下载的系统列表，如果条件允许，这些系统都需要安装到VMware中，方便以后的模拟实验，[<a title="系统列表" href="src/system_list.txt" target="_blank">点击这里</a>]，复制页面中的ed2k连接，使用迅雷下载。</p>
+				<!-- /正文 -->
+
+				<footer class="text-footer">
+					<p>
+						*转载请注明来自:<a title="晴刃-自由、互助、分享、专注计算机技术。" href="http://x.qingsword.com" target="_blank">晴刃(X.QingSword.COM)</a>
+					</p>
+					<p>*原文连接:<a title="[Metasploit]-1-渗透测试环境搭建" href="https://x.qingsword.com/qing/Metasploit-1.html" target="_blank">https://x.qingsword.com/qing/Metasploit-1.html</a></p>
+				</footer>
+			</article>
+			<!-- /文章区 -->	
+		</div>
+	</div>
+	<!-- /content -->
+	
+	<!-- footer -->
+	<footer id="footer">
+		<div class="footer-container">
+			QingSword.COM &nbsp;<img src="../logo/by-nc-sa.png" alt="Creative Commons" title="Creative Commons">
+		</div>
+	</footer>
+	<!-- /footer -->
+</body>
+</html>

